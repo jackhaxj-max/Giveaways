@@ -63,7 +63,7 @@
       </div>
       <div><label class="lbl">Link Expires After</label>
         <select id="g-exp" class="inp">
-          <option value="1">1 Day</option><option value="3" selected>3 Days</option><option value="7">7 Days</option><option value="10">10 Days</option>
+          <option value="1">1 Day</option><option value="2">2 Days</option><option value="3" selected>3 Days</option><option value="4">4 Days</option><option value="5">5 Days</option><option value="6">6 Days</option><option value="7">7 Days</option><option value="8">8 Days</option><option value="9">9 Days</option><option value="10">10 Days</option>
         </select></div>
       <button type="submit" id="gen-btn" class="btn w-full shadow-lg shadow-indigo-600/20">
         <i data-lucide="link" class="w-5 h-5"></i><span>Generate Giveaway Links</span>
@@ -117,14 +117,15 @@
       <div class="stat"><p class="text-xs text-slate-500 uppercase">Expires</p><p id="s-expiry" class="text-sm font-bold mt-2">-</p></div>
     </div>
 
-    <div class="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="font-semibold text-sm uppercase tracking-wider text-slate-500">Settings</h3>
-        <button type="button" onclick="toggleSettings()" class="text-indigo-500 hover:text-indigo-400 flex items-center gap-1 text-xs font-medium">
-          <i data-lucide="settings" class="w-4 h-4"></i><span id="settings-toggle-text">Edit Settings</span>
-        </button>
-      </div>
-      <div id="settings-body" class="hidden space-y-4">
+    <section id="settings-panel" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/60 overflow-hidden">
+      <button type="button" id="settings-toggle" aria-expanded="false" aria-controls="settings-body" onclick="toggleSettings()" class="w-full flex items-center justify-between gap-4 px-4 py-3.5 text-left hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-colors">
+        <span class="font-semibold text-sm uppercase tracking-wider text-slate-500">Settings</span>
+        <span class="inline-flex items-center gap-2 text-indigo-500 hover:text-indigo-400 text-xs font-medium">
+          <span id="settings-toggle-text">Edit Settings</span>
+          <i data-lucide="chevron-down" id="settings-chevron" class="w-4 h-4"></i>
+        </span>
+      </button>
+      <div id="settings-body" class="hidden border-t border-slate-200 dark:border-slate-700 px-4 py-4 space-y-4">
         <div><label class="lbl">Destination URL</label><input type="url" id="s-url" class="inp bg-white dark:bg-slate-800"></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div><label class="lbl">Current Password</label><input type="password" id="s-old" maxlength="8" autocomplete="off" placeholder="Only needed to change it" class="inp bg-white dark:bg-slate-800 font-mono"></div>
@@ -138,7 +139,7 @@
           </button>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 
   <!-- ERROR -->
@@ -156,243 +157,273 @@
 </footer>
 
 <script>
-// ============ CONFIG ============  (keep your real values here)
-const BIN_ID = "6acf87d6ffd5d160536a857c";
-const MASTER = "$2a$10$ISVxVv0EISYA6qDaLLhr4eDPlxx9QVu3taLGbRXIU5uaxUPBaYW4G";
-const API_URL = "https://api.jsonbin.io/v3/b/" + BIN_ID;
-const MAX_FAILS = 5;          // wrong passwords before cooldown
-const COOLDOWN_MIN = 60;      // cooldown length in minutes
-const COOLDOWN_MS = COOLDOWN_MIN * 60000;
-
-// ============ HELPERS ============
+// Giveaway data and secret checks are handled by the Vercel API.
+const API_URL = "/api/giveaways";
 const $ = id => document.getElementById(id);
 const icons = () => window.lucide && lucide.createIcons();
-const okUrl = u => { try { const p = new URL(u).protocol; return p === 'https:' || p === 'http:'; } catch (e) { return false; } };
-function makeId(n){ const a = new Uint8Array(n); crypto.getRandomValues(a); return Array.from(a, x => 'abcdefghijklmnopqrstuvwxyz0123456789'[x % 36]).join(''); }
-function roll(){ return crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296 * 100; }
+const okUrl = value => {
+  try {
+    const url = new URL(value);
+    return (url.protocol === 'https:' || url.protocol === 'http:') && !!url.hostname;
+  } catch (_) { return false; }
+};
 
-async function copyVal(id){
-  const el = $(id); el.select(); let ok = true;
-  try { await navigator.clipboard.writeText(el.value); } catch (e) { try { ok = document.execCommand('copy'); } catch (e2) { ok = false; } }
-  const b = el.nextElementSibling, old = b.textContent;
-  b.textContent = ok ? 'Copied!' : 'Press Ctrl+C';
-  setTimeout(() => b.textContent = old, 1500);
+async function apiRequest(path = '', options = {}) {
+  const headers = { ...(options.headers || {}) };
+  if (options.body) headers['Content-Type'] = 'application/json';
+  const response = await fetch(API_URL + path, {
+    ...options,
+    headers,
+    credentials: 'same-origin',
+    cache: 'no-store'
+  });
+  let data = {};
+  try { data = await response.json(); } catch (_) {}
+  if (!response.ok) {
+    const error = new Error(data.error || `Request failed (${response.status})`);
+    error.status = response.status;
+    throw error;
+  }
+  return data;
 }
-function themeUI(){
-  const d = document.documentElement.classList.contains('dark');
-  $('ic-sun').classList.toggle('hidden', !d);   // dark mode -> button offers "Light"
-  $('ic-moon').classList.toggle('hidden', d);   // light mode -> button offers "Dark"
-  $('theme-text').textContent = d ? 'Light' : 'Dark';
+
+async function copyVal(id) {
+  const input = $(id);
+  input.select();
+  let copied = true;
+  try { await navigator.clipboard.writeText(input.value); }
+  catch (_) {
+    try { copied = document.execCommand('copy'); } catch (_) { copied = false; }
+  }
+  const button = input.nextElementSibling;
+  const oldText = button.textContent;
+  button.textContent = copied ? 'Copied!' : 'Press Ctrl+C';
+  setTimeout(() => button.textContent = oldText, 1500);
 }
-function toggleTheme(){
-  const h = document.documentElement; h.classList.toggle('dark');
-  try { localStorage.setItem('pd-theme', h.classList.contains('dark') ? 'dark' : 'light'); } catch (e) {}
+
+function themeUI() {
+  const dark = document.documentElement.classList.contains('dark');
+  $('ic-sun').classList.toggle('hidden', !dark);
+  $('ic-moon').classList.toggle('hidden', dark);
+  $('theme-text').textContent = dark ? 'Light' : 'Dark';
+}
+function toggleTheme() {
+  const html = document.documentElement;
+  html.classList.toggle('dark');
+  try { localStorage.setItem('pd-theme', html.classList.contains('dark') ? 'dark' : 'light'); } catch (_) {}
   themeUI();
 }
-function showView(name){
-  ['loading','creator','viewer','admin','error'].forEach(v => $(v + '-view').classList.add('hidden'));
+function showView(name) {
+  ['loading', 'creator', 'viewer', 'admin', 'error'].forEach(view => $(view + '-view').classList.add('hidden'));
   $(name + '-view').classList.remove('hidden');
   icons();
 }
-function showError(title, text){
+function showError(title, text) {
   $('err-title').textContent = title || 'Link Not Found';
   $('err-text').textContent = text || 'This giveaway link is invalid, expired, or has been removed.';
   showView('error');
 }
 const TONES = {
-  win:  'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500/30 text-emerald-700 dark:text-emerald-300',
+  win: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500/30 text-emerald-700 dark:text-emerald-300',
   lose: 'bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200',
   warn: 'bg-amber-50 dark:bg-amber-950/30 border-amber-500/30 text-amber-700 dark:text-amber-300'
 };
-function showStatus(tone, icon, title, text){
-  const b = $('status');
-  b.className = 'mb-6 rounded-2xl p-5 text-center border fade-in ' + TONES[tone];
-  $('st-icon').textContent = icon; $('st-title').textContent = title; $('st-text').textContent = text || '';
-}
-
-// ============ STORAGE ============
-async function loadDB(){
-  let res;
-  try { res = await fetch(API_URL + "/latest", { headers: { "X-Master-Key": MASTER } }); }
-  catch (e) { throw new Error("Could not reach the server. Check your connection and try again."); }
-  if (!res.ok) throw new Error("Could not load data. Please try again.");
-  const db = (await res.json()).record || {};
-  db.giveaways = db.giveaways || {};
-  return db;
-}
-async function saveDB(data){
-  let res;
-  try { res = await fetch(API_URL, { method: "PUT", headers: { "Content-Type": "application/json", "X-Master-Key": MASTER }, body: JSON.stringify(data) }); }
-  catch (e) { throw new Error("Could not reach the server. Check your connection and try again."); }
-  if (!res.ok) throw new Error("Could not save data. Please try again.");
+function showStatus(tone, icon, title, text) {
+  const box = $('status');
+  box.className = 'mb-6 rounded-2xl p-5 text-center border fade-in ' + TONES[tone];
+  $('st-icon').textContent = icon;
+  $('st-title').textContent = title;
+  $('st-text').textContent = text || '';
 }
 
 // ============ CREATOR ============
-async function handleCreate(e){
-  e.preventDefault();
-  const url = $('g-url').value.trim(), pass = $('g-pass').value.trim();
-  if (!okUrl(url)) return alert('Reward link must start with http:// or https://');
-  if (pass.length < 3) return alert('Password must be 3-8 characters.');
-  const btn = $('gen-btn'); btn.disabled = true;
+async function handleCreate(event) {
+  event.preventDefault();
+  const button = $('gen-btn');
+  button.disabled = true;
   try {
-    const db = await loadDB(), now = Date.now();
-    for (const k in db.giveaways) if (now > new Date(db.giveaways[k].expiresAt).getTime() + 30 * 864e5) delete db.giveaways[k];
-    let id; do { id = makeId(8); } while (db.giveaways[id]);
-    const adminId = makeId(12);
-    db.giveaways[id] = {
-      name: $('g-name').value.trim(), url, password: pass,
-      capacity: parseInt($('g-cap').value), probability: parseInt($('g-prob').value),
-      winners: 0, attempts: 0, cd: {}, adminId,
-      createdAt: new Date(now).toISOString(),
-      expiresAt: new Date(now + parseInt($('g-exp').value) * 864e5).toISOString()
-    };
-    await saveDB(db);
+    const created = await apiRequest('', {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'create',
+        name: $('g-name').value,
+        url: $('g-url').value,
+        password: $('g-pass').value,
+        capacity: Number($('g-cap').value),
+        probability: Number($('g-prob').value),
+        expiresInDays: Number($('g-exp').value)
+      })
+    });
     const base = location.origin + location.pathname;
-    $('pub-link').value = base + "?g=" + id;
-    $('adm-link').value = base + "?a=" + adminId;
-    $('created-result').classList.remove('hidden'); icons();
-  } catch (err) { alert(err.message); }
-  btn.disabled = false;
+    $('pub-link').value = base + '?g=' + encodeURIComponent(created.id);
+    $('adm-link').value = base + '?a=' + encodeURIComponent(created.adminId);
+    $('created-result').classList.remove('hidden');
+    icons();
+  } catch (error) {
+    alert(error.message || 'Could not create the giveaway. Please try again.');
+  } finally {
+    button.disabled = false;
+  }
 }
 
 // ============ VIEWER ============
-const P = new URLSearchParams(location.search), GID = P.get('g'), ADMIN_ID = P.get('a');
-let cdTimer;
+const params = new URLSearchParams(location.search);
+const GID = params.get('g');
+const ADMIN_ID = params.get('a');
+let cooldownTimer;
 
-async function clientKey(gid){   // anonymous id: hash of IP (works across browsers) + giveaway id
-  let ip = '';
-  try { ip = (await (await fetch('https://api.ipify.org?format=json')).json()).ip; } catch (e) {}
-  if (!ip) { try { ip = localStorage.getItem('pd-dev'); if (!ip) { ip = 'd' + makeId(16); localStorage.setItem('pd-dev', ip); } } catch (e) { ip = 'x'; } }
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ip + ':' + gid));
-  return Array.from(new Uint8Array(buf)).slice(0, 8).map(x => x.toString(16).padStart(2, '0')).join('');
+function lockViewer(locked) {
+  $('v-pass').disabled = locked;
+  $('check-btn').disabled = locked;
 }
-const setLocal = t => { try { localStorage.setItem('pd-cd-' + GID, t); } catch (e) {} };
-const getLocal = () => { try { return +localStorage.getItem('pd-cd-' + GID) || 0; } catch (e) { return 0; } };
-function lock(v){ $('v-pass').disabled = v; $('check-btn').disabled = v; }
-
-function showCooldown(until){
-  clearInterval(cdTimer);
-  showStatus('lose', '😔', "You didn't win this giveaway", ''); lock(true);
-  const tick = () => {
-    const ms = until - Date.now();
-    if (ms <= 0) { clearInterval(cdTimer); $('status').classList.add('hidden'); lock(false); return; }
-    const m = Math.ceil(ms / 60000);
-    $('st-text').textContent = `Please try again after ${m} ${m === 1 ? 'min' : 'mins'}.`;
+function showCooldown(until) {
+  clearInterval(cooldownTimer);
+  showStatus('lose', '😔', "You didn't win this giveaway", '');
+  lockViewer(true);
+  const update = () => {
+    const remaining = Number(until) - Date.now();
+    if (remaining <= 0) {
+      clearInterval(cooldownTimer);
+      $('status').classList.add('hidden');
+      lockViewer(false);
+      return;
+    }
+    const minutes = Math.ceil(remaining / 60000);
+    $('st-text').textContent = `Please try again after ${minutes} ${minutes === 1 ? 'min' : 'mins'}.`;
   };
-  tick(); cdTimer = setInterval(tick, 15000);
+  update();
+  cooldownTimer = setInterval(update, 15000);
 }
-function win(url){
+function showWin(url) {
   showStatus('win', '🎉', 'Congratulations! You won!', 'Taking you to your reward...');
   if (okUrl(url)) setTimeout(() => { location.href = url; }, 2000);
 }
 
-async function handleCheck(e){
-  e.preventDefault();
-  const btn = $('check-btn'); btn.disabled = true; let keep = false;
+async function handleCheck(event) {
+  event.preventDefault();
+  $('check-btn').disabled = true;
+  let keepLocked = false;
   try {
-    const input = $('v-pass').value.trim().toLowerCase();
-    const key = await clientKey(GID);
-    const db = await loadDB(), g = db.giveaways[GID];
-    if (!g) { showError(); return; }
-    const now = Date.now();
-    if (now > new Date(g.expiresAt).getTime()) { showStatus('lose', '⌛', 'This giveaway has ended', 'The link has expired.'); keep = true; return; }
-    g.cd = g.cd || {};
-    for (const k in g.cd) { const c = g.cd[k]; if (!c.won && !c.fails && c.until < now) delete g.cd[k]; }
-    const r = g.cd[key] || (g.cd[key] = { until: 0, fails: 0 });
-    if (r.until > now) { setLocal(r.until); showCooldown(r.until); keep = true; return; }
-    g.attempts++;
-
-    if (input !== g.password.toLowerCase()) {
-      r.fails = (r.fails || 0) + 1;
-      if (r.fails >= MAX_FAILS) {
-        r.until = now + COOLDOWN_MS; r.fails = 0; await saveDB(db);
-        setLocal(r.until); showCooldown(r.until); keep = true;
-      } else {
-        await saveDB(db); const left = MAX_FAILS - r.fails;
+    const result = await apiRequest('', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'check', id: GID, password: $('v-pass').value })
+    });
+    switch (result.status) {
+      case 'expired':
+        showStatus('lose', '⌛', 'This giveaway has ended', 'The link has expired.');
+        lockViewer(true);
+        keepLocked = true;
+        break;
+      case 'cooldown':
+      case 'locked':
+      case 'lose':
+        showCooldown(result.cooldownUntil);
+        keepLocked = true;
+        break;
+      case 'wrong': {
+        const left = result.attemptsRemaining;
         showStatus('warn', '🔑', 'Incorrect password', `${left} ${left === 1 ? 'attempt' : 'attempts'} left. Watch the video again and try another word.`);
+        break;
       }
-      return;
+      case 'full':
+        showStatus('lose', '🎁', 'All rewards claimed', 'Correct password, but every reward has already been taken.');
+        break;
+      case 'win':
+        showWin(result.url);
+        keepLocked = true;
+        break;
+      default:
+        throw new Error('Unexpected response from the giveaway service.');
     }
-    if (r.won) { win(g.url); keep = true; return; }   // already a winner: no extra slot used
-    if (g.winners >= g.capacity) { await saveDB(db); showStatus('lose', '🎁', 'All rewards claimed', 'Correct password, but every reward has already been taken.'); keep = true; return; }
-    if (roll() < g.probability) {
-      g.winners++; r.won = true; r.fails = 0; await saveDB(db); win(g.url); keep = true;
-    } else {
-      r.until = now + COOLDOWN_MS; r.fails = 0; await saveDB(db);
-      setLocal(r.until); showCooldown(r.until); keep = true;
-    }
-  } catch (err) {
-    showStatus('warn', '⚠️', 'Something went wrong', err.message || 'Please try again.');
-  } finally { if (!keep) btn.disabled = false; }
+  } catch (error) {
+    showStatus('warn', '⚠️', 'Something went wrong', error.message || 'Please try again.');
+  } finally {
+    if (!keepLocked) $('check-btn').disabled = false;
+  }
 }
 
 // ============ ADMIN ============
-let ADMIN = null;
-async function loadAdmin(){
+async function loadAdmin() {
   try {
-    const db = await loadDB();
-    const f = Object.entries(db.giveaways).find(([, g]) => g.adminId === ADMIN_ID);
-    if (!f) { showError(); return; }
-    const [id, g] = f; ADMIN = { id };
-    $('a-title').textContent = g.name ? g.name + ' · Admin' : 'Admin Dashboard';
-    $('s-attempts').textContent = g.attempts; $('s-winners').textContent = g.winners;
-    $('s-capacity').textContent = g.capacity;
-    $('s-expiry').textContent = new Date(g.expiresAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-    if ($('settings-body').classList.contains('hidden')) $('s-url').value = g.url;
+    const data = await apiRequest('?a=' + encodeURIComponent(ADMIN_ID));
+    $('a-title').textContent = data.name ? data.name + ' · Admin' : 'Admin Dashboard';
+    $('s-attempts').textContent = data.attempts || 0;
+    $('s-winners').textContent = data.winners || 0;
+    $('s-capacity').textContent = data.capacity || 0;
+    $('s-expiry').textContent = new Date(data.expiresAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+    if ($('settings-body').classList.contains('hidden')) $('s-url').value = data.url || '';
     showView('admin');
-  } catch (err) { showError('Could not load', err.message); }
+  } catch (error) {
+    showError(error.status === 404 ? 'Link Not Found' : 'Could not load', error.message);
+  }
 }
-function toggleSettings(){
-  const b = $('settings-body'); b.classList.toggle('hidden');
-  $('settings-toggle-text').textContent = b.classList.contains('hidden') ? 'Edit Settings' : 'Close';
+function toggleSettings() {
+  const body = $('settings-body');
+  const open = body.classList.contains('hidden');
+  body.classList.toggle('hidden', !open);
+  $('settings-toggle').setAttribute('aria-expanded', String(open));
+  $('settings-toggle-text').textContent = open ? 'Close' : 'Edit Settings';
+  $('settings-chevron').setAttribute('data-lucide', open ? 'chevron-up' : 'chevron-down');
+  icons();
 }
-async function handleSave(){
-  const url = $('s-url').value.trim(), old = $('s-old').value.trim(), np = $('s-pass').value.trim();
+async function handleSave() {
+  const url = $('s-url').value.trim();
+  const currentPassword = $('s-old').value.trim();
+  const password = $('s-pass').value.trim();
   if (url && !okUrl(url)) return alert('Reward link must start with http:// or https://');
-  if (np && (np.length < 3 || np.length > 8)) return alert('New password must be 3-8 characters.');
-  const btn = $('save-btn'); btn.disabled = true;
+  if (password && (password.length < 3 || password.length > 8)) return alert('New password must be 3-8 characters.');
+  if (password && !currentPassword) return alert('Enter your current password to set a new one.');
+
+  const button = $('save-btn');
+  button.disabled = true;
   try {
-    const db = await loadDB(), g = db.giveaways[ADMIN.id];
-    if (!g) throw new Error('Giveaway not found.');
-    if (np) {
-      if (!old) throw new Error('Enter your current password to set a new one.');
-      if (old.toLowerCase() !== g.password.toLowerCase()) throw new Error('Current password is incorrect.');
-      g.password = np;
-    }
-    if (url) g.url = url;
-    await saveDB(db);
-    $('s-old').value = ''; $('s-pass').value = '';
-    alert('Settings saved!'); await loadAdmin();
-  } catch (err) { alert(err.message); }
-  btn.disabled = false;
+    await apiRequest('', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'admin-save', adminId: ADMIN_ID, url, currentPassword, password })
+    });
+    $('s-old').value = '';
+    $('s-pass').value = '';
+    alert('Settings saved!');
+    await loadAdmin();
+  } catch (error) {
+    alert(error.message || 'Could not save settings.');
+  } finally {
+    button.disabled = false;
+  }
 }
-async function handleDelete(){
+async function handleDelete() {
   if (!confirm('Delete this giveaway permanently? Both links will stop working.')) return;
-  const btn = $('del-btn'); btn.disabled = true;
+  const button = $('del-btn');
+  button.disabled = true;
   try {
-    const db = await loadDB(); delete db.giveaways[ADMIN.id]; await saveDB(db);
-    alert('Giveaway deleted.'); location.href = location.pathname;
-  } catch (err) { alert(err.message); btn.disabled = false; }
+    await apiRequest('', { method: 'POST', body: JSON.stringify({ action: 'delete', adminId: ADMIN_ID }) });
+    alert('Giveaway deleted.');
+    location.href = location.pathname;
+  } catch (error) {
+    alert(error.message || 'Could not delete the giveaway.');
+    button.disabled = false;
+  }
 }
 
 // ============ ROUTER ============
-(async function init(){
-  themeUI(); icons();
+(async function init() {
+  themeUI();
+  icons();
   if (GID) {
     try {
-      const db = await loadDB(), g = db.giveaways[GID];
-      if (!g || Date.now() > new Date(g.expiresAt).getTime()) { showError(); return; }
-      $('v-title').textContent = g.name; showView('viewer');
-      let until = getLocal();
-      if (until <= Date.now()) {
-        const r = g.cd && g.cd[await clientKey(GID)];
-        until = r && r.until > Date.now() ? r.until : 0;
-        if (until) setLocal(until);
-      }
-      if (until > Date.now()) showCooldown(until);
-    } catch (err) { showError('Could not load', err.message); }
-  } else if (ADMIN_ID) { await loadAdmin(); }
-  else { showView('creator'); }
+      const giveaway = await apiRequest('?g=' + encodeURIComponent(GID));
+      $('v-title').textContent = giveaway.name || 'Giveaway Portal';
+      showView('viewer');
+      if (Number(giveaway.cooldownUntil) > Date.now()) showCooldown(Number(giveaway.cooldownUntil));
+    } catch (error) {
+      const notFound = error.status === 404 || error.status === 410;
+      showError(notFound ? 'Link Not Found' : 'Could not load', error.message);
+    }
+  } else if (ADMIN_ID) {
+    await loadAdmin();
+  } else {
+    showView('creator');
+  }
 })();
 </script>
 </body>
