@@ -4,39 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PassDrop - Instant YouTube Video Giveaways</title>
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
         }
     </script>
-    <!-- Lucide Icons -->
+    <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 dark:bg-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
 
-    <!-- Navigation Header -->
+    <!-- ================= NAVIGATION HEADER ================= -->
     <header class="border-b border-slate-800 bg-slate-950/50 backdrop-blur sticky top-0 z-50">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <i data-lucide="gift" class="w-7 h-7 text-indigo-500"></i>
-                <span class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">PassDrop</span>
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-2 cursor-pointer" onclick="showCreatorView()">
+                    <i data-lucide="gift" class="w-7 h-7 text-indigo-500"></i>
+                    <span class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">PassDrop</span>
+                </div>
+                <span class="text-xs text-slate-500 border-l border-slate-700 pl-3 font-medium hidden sm:inline">by JAKA</span>
             </div>
-            <!-- Light/Dark Mode Toggle Button -->
-            <button type="button" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition flex items-center space-x-1.5 text-xs font-medium">
-                <i data-lucide="sun" id="theme-icon-sun" class="w-4 h-4 hidden"></i>
-                <i data-lucide="moon" id="theme-icon-moon" class="w-4 h-4"></i>
-                <span id="theme-text">Light Mode</span>
-            </button>
+            
+            <div class="flex items-center space-x-3">
+                <!-- Master Dashboard Trigger Button -->
+                <button type="button" onclick="openMasterLogin()" class="p-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 transition flex items-center space-x-1.5 text-xs font-medium">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    <span class="hidden md:inline">Master Dashboard</span>
+                </button>
+                <!-- Light/Dark Mode Toggle Button -->
+                <button type="button" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition flex items-center space-x-1.5 text-xs font-medium">
+                    <i data-lucide="sun" id="theme-icon-sun" class="w-4 h-4 hidden"></i>
+                    <i data-lucide="moon" id="theme-icon-moon" class="w-4 h-4"></i>
+                    <span id="theme-text" class="hidden sm:inline">Light Mode</span>
+                </button>
+            </div>
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
+    <!-- ================= MAIN CONTAINER ================= -->
+    <main class="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
         
-        <!-- VIEW 1: CREATOR FORM -->
-        <div id="creator-view" class="bg-slate-800/40 dark:bg-slate-800/40 bg-white border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur">
+        <!-- ================= VIEW 1: CREATOR FORM ================= -->
+        <div id="creator-view" class="max-w-3xl mx-auto bg-slate-800/40 dark:bg-slate-800/40 bg-white border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur">
             <div class="mb-6">
                 <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Create a New Giveaway</h1>
                 <p class="text-sm text-slate-600 dark:text-slate-400">Configure your video's giveaway link in seconds. No login required.</p>
@@ -123,8 +134,8 @@
             </div>
         </div>
 
-        <!-- VIEW 2: VIEWER ENTER PASSWORD FORM -->
-        <div id="viewer-view" class="hidden bg-slate-800/40 dark:bg-slate-800/40 bg-white border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur">
+        <!-- ================= VIEW 2: VIEWER ENTER PASSWORD FORM ================= -->
+        <div id="viewer-view" class="hidden max-w-xl mx-auto bg-slate-800/40 dark:bg-slate-800/40 bg-white border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur">
             <div class="text-center mb-6">
                 <div class="inline-flex p-3 bg-indigo-500/10 rounded-full mb-3 text-indigo-400">
                     <i data-lucide="gift" class="w-8 h-8"></i>
@@ -133,7 +144,7 @@
                 <p class="text-sm text-slate-600 dark:text-slate-400">Type the exact password revealed in the YouTube video to check if you won.</p>
             </div>
 
-            <!-- Consolidated Top Status Banner -->
+            <!-- Top Status Banner for Errors / Success -->
             <div id="top-status-banner" class="hidden mb-6 p-4 rounded-xl text-sm font-medium border flex items-start space-x-3">
                 <div id="top-status-icon" class="flex-shrink-0 mt-0.5"></div>
                 <div id="top-status-text" class="flex-1"></div>
@@ -156,63 +167,104 @@
             </div>
         </div>
 
-        <!-- VIEW 3: ADMIN DASHBOARD -->
-        <div id="admin-view" class="hidden bg-slate-800/40 dark:bg-slate-800/40 bg-white border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur space-y-6">
-            <div>
-                <div class="flex items-center space-x-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">
-                    <i data-lucide="shield" class="w-4 h-4"></i>
-                    <span>Admin Dashboard</span>
+        <!-- ================= VIEW 3: MASTER LOGIN MODAL / VIEW ================= -->
+        <div id="master-login-view" class="hidden max-w-md mx-auto bg-slate-800/40 dark:bg-slate-800/40 bg-white border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur">
+            <div class="text-center mb-6">
+                <div class="inline-flex p-3 bg-indigo-500/10 rounded-full mb-3 text-indigo-400">
+                    <i data-lucide="shield-check" class="w-8 h-8"></i>
                 </div>
-                <h2 id="admin-giveaway-name" class="text-2xl font-bold text-slate-900 dark:text-white">Giveaway Management</h2>
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-1">Master Dashboard Login</h2>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Enter your credentials to access the giveaway spreadsheet.</p>
             </div>
 
-            <!-- Admin Notice Banner -->
-            <div id="admin-notice" class="hidden p-4 rounded-xl text-sm font-medium border"></div>
+            <form onsubmit="handleMasterLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Portal Name</label>
+                    <input type="text" id="login-user" required placeholder="Enter portal name..." 
+                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Password</label>
+                    <input type="password" id="login-pass" required placeholder="Enter password..." 
+                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 px-4 rounded-xl transition shadow-lg shadow-indigo-600/20">
+                    Access Spreadsheet
+                </button>
+            </form>
+            <div class="mt-4 text-center">
+                <button type="button" onclick="showCreatorView()" class="text-xs text-slate-500 hover:underline">Cancel & Return</button>
+            </div>
+        </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/60 p-4 rounded-xl">
-                    <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Winners Claimed</span>
-                    <span id="admin-winners-count" class="text-2xl font-bold text-slate-900 dark:text-white">0 / 0</span>
+        <!-- ================= VIEW 4: MASTER SPREADSHEET DASHBOARD ================= -->
+        <div id="master-spreadsheet-view" class="hidden space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-800/40 border border-slate-700/60 rounded-2xl p-6 backdrop-blur">
+                <div>
+                    <div class="flex items-center space-x-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                        <span>Master Spreadsheet View</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">All Active Giveaways</h2>
                 </div>
-                <div class="bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/60 p-4 rounded-xl">
-                    <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Win Probability</span>
-                    <span id="admin-prob-val" class="text-2xl font-bold text-indigo-500">50%</span>
-                </div>
-                <div class="bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/60 p-4 rounded-xl">
-                    <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Expiration Time</span>
-                    <span id="admin-expiry-val" class="text-sm font-bold text-slate-900 dark:text-white mt-1 block">-</span>
+                <div class="flex items-center space-x-3">
+                    <button type="button" onclick="loadMasterSpreadsheet()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl text-xs font-medium transition flex items-center space-x-1.5">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>Refresh Data</span>
+                    </button>
+                    <button type="button" onclick="showCreatorView()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-medium transition">
+                        + New Giveaway
+                    </button>
                 </div>
             </div>
 
-            <div class="pt-4 flex space-x-4">
-                <button type="button" onclick="closeGiveawayEarly()" class="bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/30 px-4 py-2.5 rounded-xl text-xs font-medium transition">
-                    Close Giveaway Early
-                </button>
-                <button type="button" onclick="showCreatorView()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-medium transition">
-                    Create New Giveaway
-                </button>
+            <!-- Spreadsheet Table Container -->
+            <div class="bg-slate-800/40 border border-slate-700/60 rounded-2xl overflow-hidden shadow-2xl backdrop-blur">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs md:text-sm">
+                        <thead>
+                            <tr class="bg-slate-900/80 border-b border-slate-700 text-slate-400 uppercase tracking-wider">
+                                <th class="p-4 font-semibold">Giveaway Name</th>
+                                <th class="p-4 font-semibold">Password</th>
+                                <th class="p-4 font-semibold">Winners / Cap</th>
+                                <th class="p-4 font-semibold">Win %</th>
+                                <th class="p-4 font-semibold">Status</th>
+                                <th class="p-4 font-semibold text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spreadsheet-tbody" class="divide-y divide-slate-700/60 text-slate-300">
+                            <!-- Populated dynamically via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
     </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-slate-800 bg-slate-950/80 py-6 px-4 text-center text-xs text-slate-500 space-y-2">
+    <!-- ================= FOOTER ================= -->
+    <footer class="border-t border-slate-800 bg-slate-950/80 py-6 px-4 text-center text-xs text-slate-500 space-y-1">
         <p>&copy; 2026 PassDrop Engine. All rights reserved.</p>
+        <p class="text-indigo-400 font-medium">Built & Powered by <span class="text-slate-300">JAKA</span></p>
     </footer>
 
-    <!-- JavaScript Application Logic -->
+    <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
     <script>
+        // CONFIGURATION: JSONBin Master Key & Portal Credentials
         const JSONBIN_MASTER_KEY = "$2a$10$yvbDpRB/vVpoc/7/Yb5rt.55iF68Dg6JKEj.Lp80bouj4nm8IAuSS";
-        let currentGiveawayId = null;
-        let isAdminMode = false;
+        const MASTER_PORTAL_USER = "yajamani";
+        const MASTER_PORTAL_PASS = "Dairy30$0";
 
+        let currentGiveawayId = null;
+
+        // Runs on initial page load
         document.addEventListener("DOMContentLoaded", () => {
             if (window.lucide) lucide.createIcons();
             initTheme();
             checkUrlParams();
         });
 
+        // Toggle between Dark and Light themes
         function initTheme() {
             const isDark = localStorage.getItem("theme") !== "light";
             if (isDark) {
@@ -244,37 +296,62 @@
             if (isDark) {
                 sunIcon.classList.remove("hidden");
                 moonIcon.classList.add("hidden");
-                text.innerText = "Light Mode";
+                if(text) text.innerText = "Light Mode";
             } else {
                 sunIcon.classList.add("hidden");
                 moonIcon.classList.remove("hidden");
-                text.innerText = "Dark Mode";
+                if(text) text.innerText = "Dark Mode";
             }
         }
 
+        // Hide all views and return to the main creator form
         function showCreatorView() {
             window.location.href = window.location.pathname;
         }
 
+        // Check URL parameters (?g=... or ?admin=...) to determine which view to display
         function checkUrlParams() {
             const urlParams = new URLSearchParams(window.location.search);
             const gId = urlParams.get('g');
-            const adminId = urlParams.get('admin');
 
             if (gId) {
                 currentGiveawayId = gId;
-                document.getElementById("creator-view").classList.add("hidden");
+                hideAllViews();
                 document.getElementById("viewer-view").classList.remove("hidden");
                 loadViewerGiveaway();
-            } else if (adminId) {
-                currentGiveawayId = adminId;
-                isAdminMode = true;
-                document.getElementById("creator-view").classList.add("hidden");
-                document.getElementById("admin-view").classList.remove("hidden");
-                loadAdminDashboard();
             }
         }
 
+        // Helper to hide all primary view containers
+        function hideAllViews() {
+            document.getElementById("creator-view").classList.add("hidden");
+            document.getElementById("viewer-view").classList.add("hidden");
+            document.getElementById("master-login-view").classList.add("hidden");
+            document.getElementById("master-spreadsheet-view").classList.add("hidden");
+        }
+
+        // Open Master Login Screen
+        function openMasterLogin() {
+            hideAllViews();
+            document.getElementById("master-login-view").classList.remove("hidden");
+        }
+
+        // Validate Master Credentials and Open Spreadsheet Dashboard
+        function handleMasterLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById("login-user").value.trim();
+            const p = document.getElementById("login-pass").value.trim();
+
+            if (u === MASTER_PORTAL_USER && p === MASTER_PORTAL_PASS) {
+                hideAllViews();
+                document.getElementById("master-spreadsheet-view").classList.remove("hidden");
+                loadMasterSpreadsheet();
+            } else {
+                alert("Incorrect Portal Name or Password!");
+            }
+        }
+
+        // CREATOR: Generate Giveaway and save to JSONBin cloud
         async function handleCreateGiveaway(e) {
             if (e) e.preventDefault();
 
@@ -317,6 +394,7 @@
             };
 
             try {
+                // Post record to JSONBin API
                 const response = await fetch("https://api.jsonbin.io/v3/b", {
                     method: 'POST',
                     headers: {
@@ -357,6 +435,7 @@
             alert("Link copied to clipboard!");
         }
 
+        // VIEWER: Load giveaway details from cloud bin
         async function loadViewerGiveaway() {
             const form = document.getElementById("viewer-form");
             let gw = null;
@@ -392,6 +471,7 @@
             }
         }
 
+        // VIEWER: Validate password and process win chance
         async function handleCheckPassword(e) {
             if (e) e.preventDefault();
             const inputPass = document.getElementById("viewer-pass").value.trim();
@@ -443,6 +523,7 @@
             return false;
         }
 
+        // Helper to display top banners
         function showTopBanner(type, message) {
             const banner = document.getElementById("top-status-banner");
             const text = document.getElementById("top-status-text");
@@ -464,41 +545,52 @@
             if (window.lucide) lucide.createIcons();
         }
 
-        async function loadAdminDashboard() {
-            const notice = document.getElementById("admin-notice");
-            let gw = null;
-            const parts = currentGiveawayId.split('_');
-            if (parts.length >= 3) {
-                const binId = parts.slice(2).join('_');
-                try {
-                    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                        headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        gw = data.record;
-                    }
-                } catch (e) {}
+        // MASTER SPREADSHEET: Fetch all bins and render spreadsheet table
+        async function loadMasterSpreadsheet() {
+            const tbody = document.getElementById("spreadsheet-tbody");
+            tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Loading spreadsheet records from cloud...</td></tr>`;
+
+            try {
+                const res = await fetch("https://api.jsonbin.io/v3/b?meta=false", {
+                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+                });
+                
+                if (!res.ok) throw new Error("Failed to fetch bins");
+                const bins = await res.json();
+
+                tbody.innerHTML = "";
+
+                // Filter valid giveaway objects
+                const giveaways = bins.filter(b => b && b.id && b.name);
+
+                if (giveaways.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">No giveaways created yet.</td></tr>`;
+                    return;
+                }
+
+                giveaways.forEach(gw => {
+                    const isExpired = Date.now() > gw.viewerExpiresAt || gw.isClosedEarly;
+                    const statusBadge = isExpired 
+                        ? `<span class="px-2.5 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full text-xs font-semibold">Expired / Closed</span>`
+                        : `<span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-semibold">Active</span>`;
+
+                    const tr = document.createElement("tr");
+                    tr.className = "hover:bg-slate-800/60 transition";
+                    tr.innerHTML = `
+                        <td class="p-4 font-semibold text-slate-200">${gw.name}</td>
+                        <td class="p-4 font-mono text-indigo-400">${gw.password}</td>
+                        <td class="p-4">${gw.currentWinners} / ${gw.maxWinners}</td>
+                        <td class="p-4">${gw.probability}%</td>
+                        <td class="p-4">${statusBadge}</td>
+                        <td class="p-4 text-right">
+                            <a href="${gw.destination}" target="_blank" class="text-indigo-400 hover:underline text-xs font-medium mr-3">Reward Link</a>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-red-400">Error loading spreadsheet data. Please check your Master Key.</td></tr>`;
             }
-
-            if (!gw || Date.now() > gw.adminExpiresAt) {
-                notice.className = "p-4 rounded-xl text-sm font-medium border bg-red-950/50 text-red-300 border-red-500/30";
-                notice.innerText = "Admin link not found or expired after 10 days.";
-                notice.classList.remove("hidden");
-                return;
-            }
-
-            document.getElementById("admin-giveaway-name").innerText = gw.name;
-            document.getElementById("admin-winners-count").innerText = `${gw.currentWinners} / ${gw.maxWinners}`;
-            document.getElementById("admin-prob-val").innerText = `${gw.probability}%`;
-            
-            const daysLeft = Math.ceil((gw.adminExpiresAt - Date.now()) / (1000 * 60 * 60 * 24));
-            document.getElementById("admin-expiry-val").innerText = `${daysLeft} Days Remaining`;
-        }
-
-        function closeGiveawayEarly() {
-            alert("Giveaway closed early successfully.");
-            window.location.href = window.location.pathname;
         }
     </script>
 </body>
