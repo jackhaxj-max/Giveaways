@@ -90,7 +90,7 @@
                     </select>
                 </div>
 
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 px-4 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20">
+                <button type="submit" id="gen-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 px-4 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20">
                     <i data-lucide="link" class="w-5 h-5"></i>
                     <span>Generate Giveaway Links</span>
                 </button>
@@ -203,79 +203,303 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        async function handleCreateGiveaway(e) {
-    if (e) e.preventDefault();
+        const JSONBIN_MASTER_KEY = "$2a$10$yvbDpRB/vVpoc/7/Yb5rt.55iF68Dg6JKEj.Lp80bouj4nm8IAuSS";
+        let currentGiveawayId = null;
+        let isAdminMode = false;
 
-    const name = document.getElementById("giveaway-name").value.trim();
-    const destUrl = document.getElementById("dest-url").value.trim();
-    const passCode = document.getElementById("pass-code").value.trim();
-    const maxWinners = parseInt(document.getElementById("max-winners").value);
-    const probability = parseInt(document.getElementById("win-probability").value);
-    const expiryDays = parseInt(document.getElementById("link-expiry-days").value);
-
-    if (passCode.length < 3 || passCode.length > 8) {
-        alert("Password must be between 3 and 8 characters long.");
-        return;
-    }
-
-    const genBtn = document.getElementById("gen-btn");
-    genBtn.innerText = "Creating Cloud Giveaway...";
-    genBtn.disabled = true;
-
-    const giveawayId = 'g_' + Math.random().toString(36).substring(2, 9);
-    const adminId = 'adm_' + Math.random().toString(36).substring(2, 9);
-
-    const now = Date.now();
-    const viewerExpiresAt = now + (expiryDays * 24 * 60 * 60 * 1000);
-    const adminExpiresAt = now + (10 * 24 * 60 * 60 * 1000);
-
-    const giveawayData = {
-        id: giveawayId,
-        adminId: adminId,
-        name: name,
-        destination: destUrl,
-        password: passCode,
-        maxWinners: maxWinners,
-        probability: probability,
-        currentWinners: 0,
-        viewerExpiresAt: viewerExpiresAt,
-        adminExpiresAt: adminExpiresAt,
-        isClosedEarly: false,
-        ipLogs: {}
-    };
-
-    try {
-        // Save to JSONBin API
-        const response = await fetch("https://api.jsonbin.io/v3/b", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': $2a$10$yvbDpRB/vVpoc/7/Yb5rt.55iF68Dg6JKEj.Lp80bouj4nm8IAuSS,
-                'X-Bin-Private': 'false'
-            },
-            body: JSON.stringify(giveawayData)
+        document.addEventListener("DOMContentLoaded", () => {
+            if (window.lucide) lucide.createIcons();
+            initTheme();
+            checkUrlParams();
         });
 
-        const result = await response.json();
-        const binId = result.metadata.id;
+        function initTheme() {
+            const isDark = localStorage.getItem("theme") !== "light";
+            if (isDark) {
+                document.documentElement.classList.add("dark");
+                setThemeUI(true);
+            } else {
+                document.documentElement.classList.remove("dark");
+                setThemeUI(false);
+            }
+        }
 
-        const cloudViewerId = giveawayId + "_" + binId;
-        const cloudAdminId = adminId + "_" + binId;
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains("dark");
+            if (isDark) {
+                document.documentElement.classList.remove("dark");
+                localStorage.setItem("theme", "light");
+                setThemeUI(false);
+            } else {
+                document.documentElement.classList.add("dark");
+                localStorage.setItem("theme", "dark");
+                setThemeUI(true);
+            }
+        }
 
-        const origin = window.location.origin + window.location.pathname;
-        document.getElementById("shareable-link").value = origin + '?g=' + cloudViewerId;
-        document.getElementById("admin-shareable-link").value = origin + '?admin=' + cloudAdminId;
+        function setThemeUI(isDark) {
+            const sunIcon = document.getElementById("theme-icon-sun");
+            const moonIcon = document.getElementById("theme-icon-moon");
+            const text = document.getElementById("theme-text");
+            if (isDark) {
+                sunIcon.classList.remove("hidden");
+                moonIcon.classList.add("hidden");
+                text.innerText = "Light Mode";
+            } else {
+                sunIcon.classList.add("hidden");
+                moonIcon.classList.remove("hidden");
+                text.innerText = "Dark Mode";
+            }
+        }
 
-        const resBox = document.getElementById("created-result");
-        resBox.classList.remove("hidden");
-        resBox.scrollIntoView({ behavior: 'smooth' });
-    } catch (err) {
-        alert("Failed to connect to JSONBin storage. Check your API key.");
-    } finally {
-        genBtn.innerHTML = '<i data-lucide="link" class="w-5 h-5"></i><span>Generate Giveaway Links</span>';
-        if (window.lucide) lucide.createIcons();
-    }
-}
+        function showCreatorView() {
+            window.location.href = window.location.pathname;
+        }
+
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const gId = urlParams.get('g');
+            const adminId = urlParams.get('admin');
+
+            if (gId) {
+                currentGiveawayId = gId;
+                document.getElementById("creator-view").classList.add("hidden");
+                document.getElementById("viewer-view").classList.remove("hidden");
+                loadViewerGiveaway();
+            } else if (adminId) {
+                currentGiveawayId = adminId;
+                isAdminMode = true;
+                document.getElementById("creator-view").classList.add("hidden");
+                document.getElementById("admin-view").classList.remove("hidden");
+                loadAdminDashboard();
+            }
+        }
+
+        async function handleCreateGiveaway(e) {
+            if (e) e.preventDefault();
+
+            const name = document.getElementById("giveaway-name").value.trim();
+            const destUrl = document.getElementById("dest-url").value.trim();
+            const passCode = document.getElementById("pass-code").value.trim();
+            const maxWinners = parseInt(document.getElementById("max-winners").value);
+            const probability = parseInt(document.getElementById("win-probability").value);
+            const expiryDays = parseInt(document.getElementById("link-expiry-days").value);
+
+            if (passCode.length < 3 || passCode.length > 8) {
+                alert("Password must be between 3 and 8 characters long.");
+                return;
+            }
+
+            const genBtn = document.getElementById("gen-btn");
+            genBtn.innerText = "Creating Cloud Giveaway...";
+            genBtn.disabled = true;
+
+            const giveawayId = 'g_' + Math.random().toString(36).substring(2, 9);
+            const adminId = 'adm_' + Math.random().toString(36).substring(2, 9);
+
+            const now = Date.now();
+            const viewerExpiresAt = now + (expiryDays * 24 * 60 * 60 * 1000);
+            const adminExpiresAt = now + (10 * 24 * 60 * 60 * 1000);
+
+            const giveawayData = {
+                id: giveawayId,
+                adminId: adminId,
+                name: name,
+                destination: destUrl,
+                password: passCode,
+                maxWinners: maxWinners,
+                probability: probability,
+                currentWinners: 0,
+                viewerExpiresAt: viewerExpiresAt,
+                adminExpiresAt: adminExpiresAt,
+                isClosedEarly: false,
+                ipLogs: {}
+            };
+
+            try {
+                const response = await fetch("https://api.jsonbin.io/v3/b", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_MASTER_KEY,
+                        'X-Bin-Private': 'false'
+                    },
+                    body: JSON.stringify(giveawayData)
+                });
+
+                if (!response.ok) throw new Error("API request failed");
+
+                const result = await response.json();
+                const binId = result.metadata.id;
+
+                const cloudViewerId = giveawayId + "_" + binId;
+                const cloudAdminId = adminId + "_" + binId;
+
+                const origin = window.location.origin + window.location.pathname;
+                document.getElementById("shareable-link").value = origin + '?g=' + cloudViewerId;
+                document.getElementById("admin-shareable-link").value = origin + '?admin=' + cloudAdminId;
+
+                const resBox = document.getElementById("created-result");
+                resBox.classList.remove("hidden");
+                resBox.scrollIntoView({ behavior: 'smooth' });
+            } catch (err) {
+                alert("Failed to connect to JSONBin storage. Check your API key.");
+            } finally {
+                genBtn.innerHTML = '<i data-lucide="link" class="w-5 h-5"></i><span>Generate Giveaway Links</span>';
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function copyLink(elementId) {
+            const input = document.getElementById(elementId);
+            input.select();
+            document.execCommand("copy");
+            alert("Link copied to clipboard!");
+        }
+
+        async function loadViewerGiveaway() {
+            const form = document.getElementById("viewer-form");
+            let gw = null;
+
+            const parts = currentGiveawayId.split('_');
+            if (parts.length >= 3) {
+                const binId = parts.slice(2).join('_');
+                try {
+                    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                        headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        gw = data.record;
+                    }
+                } catch (e) {}
+            }
+
+            if (!gw) {
+                showTopBanner("error", "Error: Giveaway link not found or expired.");
+                form.classList.add("hidden");
+                return;
+            }
+
+            window.currentGiveawayData = gw;
+            window.currentBinId = parts.slice(2).join('_');
+            document.getElementById("viewer-title").innerText = gw.name;
+
+            if (gw.isClosedEarly || Date.now() > gw.viewerExpiresAt) {
+                showTopBanner("error", "This giveaway has expired or has been closed.");
+                form.classList.add("hidden");
+                return;
+            }
+        }
+
+        async function handleCheckPassword(e) {
+            if (e) e.preventDefault();
+            const inputPass = document.getElementById("viewer-pass").value.trim();
+            const gw = window.currentGiveawayData;
+            if (!gw) return false;
+
+            const clientIP = "user_browser_client";
+            let ipData = gw.ipLogs[clientIP] || { attempts: 0, cooldownUntil: 0 };
+
+            if (inputPass !== gw.password) {
+                ipData.attempts += 1;
+                if (ipData.attempts >= 5) {
+                    showTopBanner("error", "Too many incorrect attempts. Cooldown active for 2 hours.");
+                    return false;
+                }
+                showTopBanner("error", `Incorrect password! (${5 - ipData.attempts} attempts remaining)`);
+                return false;
+            }
+
+            if (gw.currentWinners >= gw.maxWinners) {
+                showTopBanner("warning", "Giveaway Over! The maximum winner limit has been reached.");
+                return false;
+            }
+
+            const roll = Math.random() * 100;
+            const didWin = roll < gw.probability;
+
+            if (didWin) {
+                gw.currentWinners += 1;
+                try {
+                    await fetch(`https://api.jsonbin.io/v3/b/${window.currentBinId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Master-Key': JSONBIN_MASTER_KEY
+                        },
+                        body: JSON.stringify(gw)
+                    });
+                } catch (err) {}
+
+                showTopBanner("success", "🎉 CONGRATULATIONS! YOU WON! Redirecting to your prize...");
+                setTimeout(() => {
+                    window.location.href = gw.destination;
+                }, 2000);
+            } else {
+                showTopBanner("warning", "You did not win this time! Please try again after 1 hour.");
+            }
+
+            return false;
+        }
+
+        function showTopBanner(type, message) {
+            const banner = document.getElementById("top-status-banner");
+            const text = document.getElementById("top-status-text");
+            const icon = document.getElementById("top-status-icon");
+
+            banner.classList.remove("hidden");
+            text.innerText = message;
+
+            if (type === "success") {
+                banner.className = "mb-6 p-4 rounded-xl text-sm font-medium border bg-emerald-950/50 text-emerald-300 border-emerald-500/30 flex items-start space-x-3";
+                icon.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>';
+            } else if (type === "warning") {
+                banner.className = "mb-6 p-4 rounded-xl text-sm font-medium border bg-amber-950/50 text-amber-300 border-amber-500/30 flex items-start space-x-3";
+                icon.innerHTML = '<i data-lucide="clock" class="w-5 h-5 text-amber-400"></i>';
+            } else {
+                banner.className = "mb-6 p-4 rounded-xl text-sm font-medium border bg-red-950/50 text-red-300 border-red-500/30 flex items-start space-x-3";
+                icon.innerHTML = '<i data-lucide="alert-circle" class="w-5 h-5 text-red-400"></i>';
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        async function loadAdminDashboard() {
+            const notice = document.getElementById("admin-notice");
+            let gw = null;
+            const parts = currentGiveawayId.split('_');
+            if (parts.length >= 3) {
+                const binId = parts.slice(2).join('_');
+                try {
+                    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                        headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        gw = data.record;
+                    }
+                } catch (e) {}
+            }
+
+            if (!gw || Date.now() > gw.adminExpiresAt) {
+                notice.className = "p-4 rounded-xl text-sm font-medium border bg-red-950/50 text-red-300 border-red-500/30";
+                notice.innerText = "Admin link not found or expired after 10 days.";
+                notice.classList.remove("hidden");
+                return;
+            }
+
+            document.getElementById("admin-giveaway-name").innerText = gw.name;
+            document.getElementById("admin-winners-count").innerText = `${gw.currentWinners} / ${gw.maxWinners}`;
+            document.getElementById("admin-prob-val").innerText = `${gw.probability}%`;
+            
+            const daysLeft = Math.ceil((gw.adminExpiresAt - Date.now()) / (1000 * 60 * 60 * 24));
+            document.getElementById("admin-expiry-val").innerText = `${daysLeft} Days Remaining`;
+        }
+
+        function closeGiveawayEarly() {
+            alert("Giveaway closed early successfully.");
+            window.location.href = window.location.pathname;
+        }
     </script>
 </body>
 </html>
