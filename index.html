@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PassDrop - Instant YouTube Video Giveaways</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 dark:bg-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
+
+    <!-- Navigation Header -->
+    <header class="border-b border-slate-800 bg-slate-950/50 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i data-lucide="gift" class="w-7 h-7 text-indigo-500"></i>
+                <span class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">PassDrop</span>
+            </div>
+            <!-- Light/Dark Mode Toggle Button -->
+            <button type="button" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition flex items-center space-x-1.5 text-xs font-medium">
+                <i data-lucide="sun" id="theme-icon-sun" class="w-4 h-4 hidden"></i>
+                <i data-lucide="moon" id="theme-icon-moon" class="w-4 h-4"></i>
+                <span id="theme-text">Light Mode</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
+        
+        <!-- VIEW 1: CREATOR FORM -->
+        <div id="creator-view" class="bg-slate-800/40 dark:bg-slate-800/40 bg-white border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur">
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Create a New Giveaway</h1>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Configure your video's giveaway link in seconds. No login required.</p>
+            </div>
+
+            <form id="create-form" onsubmit="handleCreateGiveaway(event)" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Giveaway Name / Title</label>
+                    <input type="text" id="giveaway-name" required placeholder="e.g. Tech Giveaway Episode 45" 
+                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Destination URL / Reward Link</label>
+                    <input type="url" id="dest-url" required placeholder="https://drive.google.com/... or reward link" 
+                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Secret Password (3 to 8 characters)</label>
+                    <input type="text" id="pass-code" required minlength="3" maxlength="8" placeholder="e.g. WIN" 
+                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100 font-mono">
+                    <span class="text-xs text-slate-500 mt-1 block">Must be between 3 and 8 characters long.</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Winner Capacity Cap</label>
+                        <input type="number" id="max-winners" min="1" value="50" required 
+                            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Win Probability</label>
+                        <select id="win-probability" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100">
+                            <option value="25">25% Win Chance</option>
+                            <option value="50" selected>50% Win Chance</option>
+                            <option value="75">75% Win Chance</option>
+                            <option value="100">100% Win Chance</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Public Link Lifetime Expiration</label>
+                    <select id="link-expiry-days" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100">
+                        <option value="1">1 Day</option>
+                        <option value="2">2 Days</option>
+                        <option value="3" selected>3 Days</option>
+                        <option value="5">5 Days</option>
+                        <option value="7">7 Days</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 px-4 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20">
+                    <i data-lucide="link" class="w-5 h-5"></i>
+                    <span>Generate Giveaway Links</span>
+                </button>
+            </form>
+
+            <!-- Created Link Result Box -->
+            <div id="created-result" class="hidden mt-6 p-5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 rounded-xl space-y-4">
+                <div class="flex items-center space-x-2 text-emerald-700 dark:text-emerald-400 font-medium text-sm">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                    <span>Giveaway Links Created Successfully!</span>
+                </div>
+                
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <span class="block text-slate-600 dark:text-slate-400 font-medium mb-1">Public Viewer Link:</span>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="shareable-link" readonly class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-300 font-mono">
+                            <button type="button" onclick="copyLink('shareable-link')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded-lg font-medium transition text-white">Copy</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="block text-slate-600 dark:text-slate-400 font-medium mb-1">Private Admin Dashboard Link (Expires in 10 Days):</span>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="admin-shareable-link" readonly class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-300 font-mono">
+                            <button type="button" onclick="copyLink('admin-shareable-link')" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg font-medium transition text-white">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: VIEWER ENTER PASSWORD FORM -->
+        <div id="viewer-view" class="hidden bg-slate-800/40 dark:bg-slate-800/40 bg-white border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur">
+            <div class="text-center mb-6">
+                <div class="inline-flex p-3 bg-indigo-500/10 rounded-full mb-3 text-indigo-400">
+                    <i data-lucide="gift" class="w-8 h-8"></i>
+                </div>
+                <h2 id="viewer-title" class="text-2xl font-bold text-slate-900 dark:text-white mb-1">Giveaway Portal</h2>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Type the exact password revealed in the YouTube video to check if you won.</p>
+            </div>
+
+            <!-- Consolidated Top Status Banner -->
+            <div id="top-status-banner" class="hidden mb-6 p-4 rounded-xl text-sm font-medium border flex items-start space-x-3">
+                <div id="top-status-icon" class="flex-shrink-0 mt-0.5"></div>
+                <div id="top-status-text" class="flex-1"></div>
+            </div>
+
+            <form id="viewer-form" onsubmit="handleCheckPassword(event)" class="space-y-4">
+                <div>
+                    <input type="text" id="viewer-pass" required minlength="3" maxlength="8" placeholder="Enter secret password..." 
+                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-wider focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100">
+                </div>
+
+                <button id="submit-pass-btn" type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 px-4 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20">
+                    <i data-lucide="key" class="w-5 h-5"></i>
+                    <span>Unlock & Check Status</span>
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <button type="button" onclick="showCreatorView()" class="text-xs text-slate-500 dark:text-slate-400 hover:underline">Create Your Own Giveaway Link</button>
+            </div>
+        </div>
+
+        <!-- VIEW 3: ADMIN DASHBOARD -->
+        <div id="admin-view" class="hidden bg-slate-800/40 dark:bg-slate-800/40 bg-white border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur space-y-6">
+            <div>
+                <div class="flex items-center space-x-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">
+                    <i data-lucide="shield" class="w-4 h-4"></i>
+                    <span>Admin Dashboard</span>
+                </div>
+                <h2 id="admin-giveaway-name" class="text-2xl font-bold text-slate-900 dark:text-white">Giveaway Management</h2>
+            </div>
+
+            <!-- Admin Notice Banner -->
+            <div id="admin-notice" class="hidden p-4 rounded-xl text-sm font-medium border"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/60 p-4 rounded-xl">
+                    <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Winners Claimed</span>
+                    <span id="admin-winners-count" class="text-2xl font-bold text-slate-900 dark:text-white">0 / 0</span>
+                </div>
+                <div class="bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/60 p-4 rounded-xl">
+                    <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Win Probability</span>
+                    <span id="admin-prob-val" class="text-2xl font-bold text-indigo-500">50%</span>
+                </div>
+                <div class="bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/60 p-4 rounded-xl">
+                    <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Expiration Time</span>
+                    <span id="admin-expiry-val" class="text-sm font-bold text-slate-900 dark:text-white mt-1 block">-</span>
+                </div>
+            </div>
+
+            <div class="pt-4 flex space-x-4">
+                <button type="button" onclick="closeGiveawayEarly()" class="bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/30 px-4 py-2.5 rounded-xl text-xs font-medium transition">
+                    Close Giveaway Early
+                </button>
+                <button type="button" onclick="showCreatorView()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-medium transition">
+                    Create New Giveaway
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-slate-950/80 py-6 px-4 text-center text-xs text-slate-500 space-y-2">
+        <p>&copy; 2026 PassDrop Engine. All rights reserved.</p>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        let currentGiveawayId = null;
+        let isAdminMode = false;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            if (window.lucide) lucide.createIcons();
+            initTheme();
+            checkUrlParams();
+        });
+
+        // Theme Toggle
+        function initTheme() {
+            const isDark = localStorage.getItem("theme") !== "light";
+            if (isDark) {
+                document.documentElement.classList.add("dark");
+                setThemeUI(true);
+            } else {
+                document.documentElement.classList.remove("dark");
+                setThemeUI(false);
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains("dark");
+            if (isDark) {
+                document.documentElement.classList.remove("dark");
+                localStorage.setItem("theme", "light");
+                setThemeUI(false);
+            } else {
+                document.documentElement.classList.add("dark");
+                localStorage.setItem("theme", "dark");
+                setThemeUI(true);
+            }
+        }
+
+        function setThemeUI(isDark) {
+            const sunIcon = document.getElementById("theme-icon-sun");
+            const moonIcon = document.getElementById("theme-icon-moon");
+            const text = document.getElementById("theme-text");
+            if (isDark) {
+                sunIcon.classList.remove("hidden");
+                moonIcon.classList.add("hidden");
+                text.innerText = "Light Mode";
+            } else {
+                sunIcon.classList.add("hidden");
+                moonIcon.classList.remove("hidden");
+                text.innerText = "Dark Mode";
+            }
+        }
+
+        function showCreatorView() {
+            window.location.href = window.location.pathname;
+        }
+
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const gId = urlParams.get('g');
+            const adminId = urlParams.get('admin');
+
+            if (gId) {
+                currentGiveawayId = gId;
+                document.getElementById("creator-view").classList.add("hidden");
+                document.getElementById("viewer-view").classList.remove("hidden");
+                loadViewerGiveaway();
+            } else if (adminId) {
+                currentGiveawayId = adminId;
+                isAdminMode = true;
+                document.getElementById("creator-view").classList.add("hidden");
+                document.getElementById("admin-view").classList.remove("hidden");
+                loadAdminDashboard();
+            }
+        }
+
+        // CREATOR: Generate Links
+        function handleCreateGiveaway(e) {
+            if (e) e.preventDefault();
+
+            const name = document.getElementById("giveaway-name").value.trim();
+            const destUrl = document.getElementById("dest-url").value.trim();
+            const passCode = document.getElementById("pass-code").value.trim();
+            const maxWinners = parseInt(document.getElementById("max-winners").value);
+            const probability = parseInt(document.getElementById("win-probability").value);
+            const expiryDays = parseInt(document.getElementById("link-expiry-days").value);
+
+            // Password length validation
+            if (passCode.length < 3 || passCode.length > 8) {
+                alert("Password must be between 3 and 8 characters long.");
+                return;
+            }
+
+            const giveawayId = 'g_' + Math.random().toString(36).substring(2, 9);
+            const adminId = 'adm_' + Math.random().toString(36).substring(2, 9);
+
+            const now = Date.now();
+            const viewerExpiresAt = now + (expiryDays * 24 * 60 * 60 * 1000);
+            const adminExpiresAt = now + (10 * 24 * 60 * 60 * 1000); // 10 days for admin link
+
+            const giveawayData = {
+                id: giveawayId,
+                adminId: adminId,
+                name: name,
+                destination: destUrl,
+                password: passCode,
+                maxWinners: maxWinners,
+                probability: probability,
+                currentWinners: 0,
+                viewerExpiresAt: viewerExpiresAt,
+                adminExpiresAt: adminExpiresAt,
+                isClosedEarly: false,
+                ipLogs: {}
+            };
+
+            // Store both keys so either viewer or admin link resolves correctly
+            localStorage.setItem(giveawayId, JSON.stringify(giveawayData));
+            localStorage.setItem(adminId, JSON.stringify(giveawayData));
+
+            const origin = window.location.origin + window.location.pathname;
+            document.getElementById("shareable-link").value = origin + '?g=' + giveawayId;
+            document.getElementById("admin-shareable-link").value = origin + '?admin=' + adminId;
+
+            const resBox = document.getElementById("created-result");
+            resBox.classList.remove("hidden");
+            resBox.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyLink(elementId) {
+            const input = document.getElementById(elementId);
+            input.select();
+            document.execCommand("copy");
+            alert("Link copied to clipboard!");
+        }
+
+        // VIEWER: Load & Validate State
+        function loadViewerGiveaway() {
+            const raw = localStorage.getItem(currentGiveawayId);
+            const banner = document.getElementById("top-status-banner");
+            const statusText = document.getElementById("top-status-text");
+            const statusIcon = document.getElementById("top-status-icon");
+            const form = document.getElementById("viewer-form");
+
+            if (!raw) {
+                showTopBanner("error", "Error: Giveaway link not found or expired.");
+                form.classList.add("hidden");
+                return;
+            }
+
+            const gw = JSON.parse(raw);
+            document.getElementById("viewer-title").innerText = gw.name;
+
+            // Check Expiration or Closed Early
+            if (gw.isClosedEarly || Date.now() > gw.viewerExpiresAt) {
+                showTopBanner("error", "This giveaway has expired or has been closed.");
+                form.classList.add("hidden");
+                localStorage.removeItem(currentGiveawayId);
+                return;
+            }
+
+            // Check IP Cooldown
+            const clientIP = "user_browser_client"; // Local simulation client ID
+            const ipData = gw.ipLogs[clientIP] || { attempts: 0, cooldownUntil: 0 };
+            if (ipData.cooldownUntil && Date.now() < ipData.cooldownUntil) {
+                const remMins = Math.ceil((ipData.cooldownUntil - Date.now()) / (1000 * 60));
+                showTopBanner("warning", `Rate limit active. Please try again in ${remMins} minutes.`);
+            }
+        }
+
+        // VIEWER: Check Password
+        function handleCheckPassword(e) {
+            if (e) e.preventDefault();
+            const inputPass = document.getElementById("viewer-pass").value.trim();
+            const raw = localStorage.getItem(currentGiveawayId);
+            if (!raw) return false;
+
+            let gw = JSON.parse(raw);
+            const clientIP = "user_browser_client";
+            let ipData = gw.ipLogs[clientIP] || { attempts: 0, cooldownUntil: 0 };
+
+            if (inputPass !== gw.password) {
+                ipData.attempts += 1;
+                if (ipData.attempts >= 5) {
+                    ipData.cooldownUntil = Date.now() + (2 * 60 * 60 * 1000); // 2 hours
+                    gw.ipLogs[clientIP] = ipData;
+                    localStorage.setItem(currentGiveawayId, JSON.stringify(gw));
+                    showTopBanner("error", "Too many incorrect attempts. Cooldown active for 2 hours.");
+                    return false;
+                }
+                gw.ipLogs[clientIP] = ipData;
+                localStorage.setItem(currentGiveawayId, JSON.stringify(gw));
+                showTopBanner("error", `Incorrect password! (${5 - ipData.attempts} attempts remaining)`);
+                return false;
+            }
+
+            // Check Capacity
+            if (gw.currentWinners >= gw.maxWinners) {
+                showTopBanner("warning", "Giveaway Over! The maximum winner limit has been reached.");
+                return false;
+            }
+
+            // Win Probability Roll
+            const roll = Math.random() * 100;
+            const didWin = roll < gw.probability;
+
+            ipData.cooldownUntil = Date.now() + (60 * 60 * 1000); // 1 hour retry limit
+            gw.ipLogs[clientIP] = ipData;
+
+            if (didWin) {
+                gw.currentWinners += 1;
+                localStorage.setItem(currentGiveawayId, JSON.stringify(gw));
+                showTopBanner("success", "🎉 CONGRATULATIONS! YOU WON! Redirecting to your prize...");
+                setTimeout(() => {
+                    window.location.href = gw.destination;
+                }, 2000);
+            } else {
+                localStorage.setItem(currentGiveawayId, JSON.stringify(gw));
+                showTopBanner("warning", "You did not win this time! Please try again after 1 hour.");
+            }
+
+            return false;
+        }
+
+        function showTopBanner(type, message) {
+            const banner = document.getElementById("top-status-banner");
+            const text = document.getElementById("top-status-text");
+            const icon = document.getElementById("top-status-icon");
+
+            banner.classList.remove("hidden");
+            text.innerText = message;
+
+            if (type === "success") {
+                banner.className = "mb-6 p-4 rounded-xl text-sm font-medium border bg-emerald-950/50 text-emerald-300 border-emerald-500/30 flex items-start space-x-3";
+                icon.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>';
+            } else if (type === "warning") {
+                banner.className = "mb-6 p-4 rounded-xl text-sm font-medium border bg-amber-950/50 text-amber-300 border-amber-500/30 flex items-start space-x-3";
+                icon.innerHTML = '<i data-lucide="clock" class="w-5 h-5 text-amber-400"></i>';
+            } else {
+                banner.className = "mb-6 p-4 rounded-xl text-sm font-medium border bg-red-950/50 text-red-300 border-red-500/30 flex items-start space-x-3";
+                icon.innerHTML = '<i data-lucide="alert-circle" class="w-5 h-5 text-red-400"></i>';
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // ADMIN DASHBOARD
+        function loadAdminDashboard() {
+            const raw = localStorage.getItem(currentGiveawayId);
+            const notice = document.getElementById("admin-notice");
+
+            if (!raw) {
+                notice.className = "p-4 rounded-xl text-sm font-medium border bg-red-950/50 text-red-300 border-red-500/30";
+                notice.innerText = "Admin link not found or expired after 10 days.";
+                notice.classList.remove("hidden");
+                return;
+            }
+
+            const gw = JSON.parse(raw);
+            if (Date.now() > gw.adminExpiresAt) {
+                notice.className = "p-4 rounded-xl text-sm font-medium border bg-red-950/50 text-red-300 border-red-500/30";
+                notice.innerText = "This admin dashboard link has expired after 10 days.";
+                notice.classList.remove("hidden");
+                return;
+            }
+
+            document.getElementById("admin-giveaway-name").innerText = gw.name;
+            document.getElementById("admin-winners-count").innerText = `${gw.currentWinners} / ${gw.maxWinners}`;
+            document.getElementById("admin-prob-val").innerText = `${gw.probability}%`;
+            
+            const daysLeft = Math.ceil((gw.adminExpiresAt - Date.now()) / (1000 * 60 * 60 * 24));
+            document.getElementById("admin-expiry-val").innerText = `${daysLeft} Days Remaining`;
+        }
+
+        function closeGiveawayEarly() {
+            const raw = localStorage.getItem(currentGiveawayId);
+            if (!raw) return;
+            let gw = JSON.parse(raw);
+            gw.isClosedEarly = true;
+            localStorage.setItem(currentGiveawayId, JSON.stringify(gw));
+            alert("Giveaway closed early successfully.");
+            location.reload();
+        }
+    </script>
+</body>
+</html>
