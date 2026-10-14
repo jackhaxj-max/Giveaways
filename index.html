@@ -173,10 +173,9 @@
 </footer>
 
 <script>
-// ============ CONFIG ============
-const BIN_ID  = "6acf87d6ffd5d160536a857c";
-const MASTER  = "$2a$10$ISVxVv0EISYA6qDaLLhr4eDPlxx9QVu3taLGbRXIU5uaxUPBaYW4G";
-const API_URL = "https://api.jsonbin.io/v3/b/" + BIN_ID;
+// Giveaway data is accessed through the Vercel serverless API.
+// Keep JSONBin credentials in Vercel environment variables, never in browser code.
+const API_URL = "/api/giveaways";
 
 // ============ HELPERS ============
 function lucideIcons(){ if(window.lucide) lucide.createIcons(); }
@@ -218,155 +217,91 @@ function showStatus(msg, type){
   box.textContent = msg;
 }
 
-// ============ STORAGE ============
-async function loadDB(){
-  const res = await fetch(API_URL + "/latest", {
-    headers: { "X-Master-Key": MASTER }
+// ============ SERVER API ============
+async function apiRequest(path='', options={}){
+  const headers = { ...(options.headers || {}) };
+  if(options.body) headers['Content-Type'] = 'application/json';
+  const res = await fetch(API_URL + path, {
+    ...options,
+    headers,
+    credentials: 'same-origin',
+    cache: 'no-store'
   });
-  if(!res.ok) throw new Error("Failed to load database");
-  const json = await res.json();
-  return json.record;
-}
-async function saveDB(data){
-  const res = await fetch(API_URL, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Master-Key": MASTER
-    },
-    body: JSON.stringify(data)
-  });
-  if(!res.ok) throw new Error("Failed to save database");
+  let data = {};
+  try{ data = await res.json(); }catch(_){ }
+  if(!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  return data;
 }
 
 // ============ CREATOR ============
-function makeId(){ return Math.random().toString(36).substring(2,10); }
-
 async function handleCreate(e){
   e.preventDefault();
   const btn = document.getElementById('gen-btn');
   btn.disabled = true;
   try{
-    const db = await loadDB();
-    if(!db.giveaways) db.giveaways = {};
-    const id = makeId();
-    const adminId = makeId();
-    const now = new Date();
-    const expiry = new Date(now.getTime() + parseInt(document.getElementById('g-exp').value) * 86400000);
-
-    db.giveaways[id] = {
-      name: document.getElementById('g-name').value.trim(),
-      url: document.getElementById('g-url').value.trim(),
-      password: document.getElementById('g-pass').value.trim(),
-      capacity: parseInt(document.getElementById('g-cap').value),
-      probability: parseInt(document.getElementById('g-prob').value),
-      winners: 0,
-      attempts: 0,
-      adminId: adminId,
-      ipLogs: {},
-      createdAt: now.toISOString(),
-      expiresAt: expiry.toISOString()
-    };
-    await saveDB(db);
+    const result = await apiRequest('', {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'create',
+        name: document.getElementById('g-name').value,
+        url: document.getElementById('g-url').value,
+        password: document.getElementById('g-pass').value,
+        capacity: parseInt(document.getElementById('g-cap').value, 10),
+        probability: parseInt(document.getElementById('g-prob').value, 10),
+        expiresInDays: parseInt(document.getElementById('g-exp').value, 10)
+      })
+    });
 
     const base = location.origin + location.pathname;
-    document.getElementById('pub-link').value = base + "?g=" + id;
-    document.getElementById('adm-link').value = base + "?a=" + adminId;
+    document.getElementById('pub-link').value = base + "?g=" + encodeURIComponent(result.id);
+    document.getElementById('adm-link').value = base + "?a=" + encodeURIComponent(result.adminId);
     document.getElementById('created-result').classList.remove('hidden');
     lucideIcons();
   }catch(err){
     alert("Error: " + err.message);
+  }finally{
+    btn.disabled = false;
   }
-  btn.disabled = false;
 }
 
-// ============ VIEWER (WITH 2-HOUR COOLDOWN) ============
+// ============ VIEWER ============
 async function handleCheck(e){
   e.preventDefault();
   const btn = document.getElementById('check-btn');
   btn.disabled = true;
   try{
-    const db = await loadDB();
-    const g = db.giveaways[GIVEAWAY_ID];
-    if(!g) throw new Error("notfound");
+    const result = await apiRequest('', {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'check',
+        id: GIVEAWAY_ID,
+        password: document.getElementById('v-pass').value
+      })
+    });
 
-    const now = new Date();
-    if(now > new Date(g.expiresAt)){
+    if(result.status === 'expired'){
       showStatus("This giveaway has expired.", "lose");
-      btn.disabled = false;
-      return;
-    }
-
-    if(!g.ipLogs) g.ipLogs = {};
-    let clientId = localStorage.getItem("passdrop_client_id");
-    if(!clientId){
-      clientId = "client_" + Math.random().toString(36).substring(2, 10);
-      localStorage.setItem("passdrop_client_id", clientId);
-    }
-
-    let clientData = g.ipLogs[clientId] || { attempts: 0, cooldownUntil: 0 };
-    const currentTime = Date.now();
-
-    // Check 2-hour cooldown
-    if(currentTime < clientData.cooldownUntil){
-      const minutesLeft = Math.ceil((clientData.cooldownUntil - currentTime) / (1000 * 60));
-      showStatus(`Cooldown active! Please try again in ${minutesLeft} minute(s).`, "lose");
-      btn.disabled = false;
-      return;
-    }
-
-    g.attempts++;
-    const input = document.getElementById('v-pass').value.trim();
-
-    // Wrong Password Check
-    if(input.toLowerCase() !== g.password.toLowerCase()){
-      clientData.attempts = (clientData.attempts || 0) + 1;
-
-      if(clientData.attempts >= 5){
-        clientData.cooldownUntil = currentTime + (2 * 60 * 60 * 1000); // 2 Hours
-        g.ipLogs[clientId] = clientData;
-        await saveDB(db);
-        showStatus("Too many incorrect attempts! Cooldown active for 2 hours.", "lose");
-        btn.disabled = false;
-        return;
-      }
-
-      g.ipLogs[clientId] = clientData;
-      await saveDB(db);
-      showStatus(`Incorrect password! (${5 - clientData.attempts} attempt(s) remaining)`, "lose");
-      btn.disabled = false;
-      return;
-    }
-
-    // Reset wrong attempts on correct password
-    clientData.attempts = 0;
-
-    if(g.winners >= g.capacity){
-      g.ipLogs[clientId] = clientData;
-      await saveDB(db);
+    } else if(result.status === 'cooldown'){
+      showStatus(`Cooldown active! Please try again in ${result.minutesLeft} minute(s).`, "lose");
+    } else if(result.status === 'locked'){
+      showStatus("Too many incorrect attempts! Cooldown active for 2 hours.", "lose");
+    } else if(result.status === 'wrong'){
+      showStatus(`Incorrect password! (${result.attemptsRemaining} attempt(s) remaining)`, "lose");
+    } else if(result.status === 'full'){
       showStatus("Correct password — but all rewards have already been claimed!", "lose");
-      btn.disabled = false;
-      return;
-    }
-
-    // Roll Win Probability
-    if(Math.random() * 100 < g.probability){
-      g.winners++;
-      g.ipLogs[clientId] = clientData;
-      await saveDB(db);
+    } else if(result.status === 'win'){
       showStatus("🎉 Congratulations! You won! Redirecting to your reward...", "win");
-      setTimeout(()=>{ window.location.href = g.url; }, 2000);
-    } else {
-      // Non-winner: Trigger 2-hour cooldown
-      clientData.cooldownUntil = currentTime + (2 * 60 * 60 * 1000); // 2 Hours
-      g.ipLogs[clientId] = clientData;
-      await saveDB(db);
+      setTimeout(()=>{ window.location.href = result.url; }, 2000);
+      return;
+    } else if(result.status === 'lose'){
       showStatus("Correct password, but you didn't win this time! Please try again after 2 hours.", "lose");
-      btn.disabled = false;
+    } else {
+      throw new Error("Unexpected response from the giveaway service.");
     }
   }catch(err){
-    showView('error');
+    showStatus(err.message || "Could not check this giveaway. Please try again.", "lose");
   }
+  btn.disabled = false;
 }
 
 // ============ ADMIN ============
@@ -374,22 +309,13 @@ let CURRENT_ADMIN = null;
 
 async function loadAdmin(){
   try{
-    const db = await loadDB();
-    let found = null;
-    if(db.giveaways){
-      for(const [id, g] of Object.entries(db.giveaways)){
-        if(g.adminId === CURRENT_ADMIN){ found = [id, g]; break; }
-      }
-    }
-    if(!found){ showView('error'); return; }
-
-    const [id, g] = found;
-    window.ADMIN_GIVEAWAY = { id, ...g };
-    document.getElementById('s-attempts').textContent = g.attempts || 0;
-    document.getElementById('s-winners').textContent = g.winners || 0;
-    document.getElementById('s-capacity').textContent = g.capacity || 0;
-    document.getElementById('s-expiry').textContent = new Date(g.expiresAt).toLocaleDateString();
-    document.getElementById('s-url').value = g.url || '';
+    const data = await apiRequest('?a=' + encodeURIComponent(CURRENT_ADMIN));
+    window.ADMIN_GIVEAWAY = { id: data.id };
+    document.getElementById('s-attempts').textContent = data.attempts || 0;
+    document.getElementById('s-winners').textContent = data.winners || 0;
+    document.getElementById('s-capacity').textContent = data.capacity || 0;
+    document.getElementById('s-expiry').textContent = new Date(data.expiresAt).toLocaleDateString();
+    document.getElementById('s-url').value = data.url || '';
     document.getElementById('settings-toggle-text').textContent = 'Edit Settings';
   }catch(err){
     showView('error');
@@ -407,26 +333,23 @@ async function handleSave(){
   const btn = document.getElementById('save-btn');
   btn.disabled = true;
   try{
-    const db = await loadDB();
-    const g = db.giveaways[window.ADMIN_GIVEAWAY.id];
-    if(!g) throw new Error("notfound");
-
-    const newUrl = document.getElementById('s-url').value.trim();
-    if(newUrl) g.url = newUrl;
-
-    const newPass = document.getElementById('s-pass').value.trim();
-    if(newPass){
-      if(newPass.length < 3){ alert("Password must be at least 3 characters."); btn.disabled=false; return; }
-      g.password = newPass;
-    }
-    await saveDB(db);
+    await apiRequest('', {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'admin-save',
+        adminId: CURRENT_ADMIN,
+        url: document.getElementById('s-url').value,
+        password: document.getElementById('s-pass').value
+      })
+    });
     document.getElementById('s-pass').value = "";
     alert("Settings saved successfully!");
     await loadAdmin();
   }catch(err){
     alert("Error: " + err.message);
+  }finally{
+    btn.disabled = false;
   }
-  btn.disabled = false;
 }
 
 // ============ ROUTER ============
@@ -437,13 +360,9 @@ const ADMIN_ID = params.get('a');
 (async function init(){
   if(GIVEAWAY_ID){
     try{
-      const db = await loadDB();
-      const g = db.giveaways ? db.giveaways[GIVEAWAY_ID] : null;
-      if(!g || new Date() > new Date(g.expiresAt)){ showView('error'); }
-      else{
-        document.getElementById('v-title').textContent = g.name;
-        showView('viewer');
-      }
+      const giveaway = await apiRequest('?g=' + encodeURIComponent(GIVEAWAY_ID));
+      document.getElementById('v-title').textContent = giveaway.name || 'Giveaway Portal';
+      showView('viewer');
     }catch(err){ showView('error'); }
   } else if(ADMIN_ID){
     CURRENT_ADMIN = ADMIN_ID;
