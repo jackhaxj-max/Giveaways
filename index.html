@@ -18,146 +18,9 @@
   <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
     <div class="flex items-center space-x-2 cursor-pointer" onclick="showView('creator')">
       <i data-lucide="gift" class="w-7 h-7 text-indigo-500"></i>
-      <span class="text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text-transparent">PassDrop</span>
-    </div>
-    <button type="button" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center space-x1.5 text-xs font-medium">
-      <i data-lucide="moon" id="icon-moon" class="w-4 h-4"></i>
-      <i data-lucide="sun" id="icon-sun" class="w-4 h- hidden"></i>
-      <span id="theme-text">Light</span>
-    </button>
-  </div>
-</header>
-
-<main class="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
-
-  <!-- CREATOR VIEW -->
-  <div id="creator-view" class="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl">
-    <h1 class="text-2xl font-bold mb-2">Create a New Giveaway</h1>
-    <p class="text-sm text-slate-500 mb-6">Configure your video's giveaway link in seconds.</p>
-    <form onsubmit="handleCreate(event)" class="space-y-5">
-      <div>
-         class="block text-xs font-semibold uppercase tracking-wider mb-2">Giveaway Name</label>
-        <input type="text" id="g-name" required placeholder="e.g. Tech Giveaway Ep 45" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Destination URL (Reward Link)</label>
-        <input type="url" id="g-url" required placeholder="https://drive.google.com/..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4-3 text-sm focus:outline-none focus:border-indigo-500">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Secret Password (3-8 chars)</label>
-        <input type="text" id="g-pass" required minlength="3" maxlength="8" placeholder="e.g. WIN" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm fontono focus:outline-none focus:border-indigo-500">
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Winner</label>
-          <input type="number" id="g-cap" min="1" value="50" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3-sm focus:outline-none focus:border-indigo-500">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Win Probability</label>
-          <select id="g-prob" class="w-full bg-slate50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
-            <option value="25">25%</option><option value="50" selected>50</option><option value="75">75%</option><option value="100">100%</option>
-          </select>
-        </div>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold uppercase tracking-wider mb-2Link Expires After</label>
-        <select id="g-exp" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo500">
-          <option value="1">1 Day</option><option value="3" selected>3 Days</option><option value="7">7 Days</option>
-        </select>
-      </div>
-      <button type="submit" id="gen-btn" class="w-full bgigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20 disabled:opacity-50">
-        <i data-lucide="link" class="w-5 h-"></i><span>Generate Giveaway Links</span>
-      </button>
-    </form>
-
-    <div id="created-result" class="hidden mt-6 p-5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30-xl space-y-4 fade-in">
-      <div class="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 font-medium text-sm">
-        <i data-lucide="check-circle" class="w-5 h-5"></i><span>Giveaway Created Successfully!</span>
-      </div>
-      <div>
-        <span class="block text-xs text-slate-500 mb-1">Public Viewer Link:</span>
-        <div class="flex space-x-2">
-          <input type="text" id="-link" readonly class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-mono">
-          <button type="button" onclick="copyVal('pub-link class="bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded-lg text-xs font-medium text-white">Copy</button>
-        </div>
-      </div>
-      <div>
-        <span class="block text-xs text-slate- mb-1">Private Admin Link (keep secret):</span>
-        <div class="flex space-x-2">
-          <input type="text" id="adm-link" readonly class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300:border-slate-700 rounded-lg px-3 py-2 text-xs font-mono">
-          <button type="button" onclick="copyVal('adm-link')" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg text-xs font-medium-white">Copy</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- VIEWER VIEW -->
-  <div id="viewer-view" class="hidden bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate700/60 rounded-2xl p-6 md:p-8 shadow-2xl fade-in">
-    <div class="text-center mb-6">
-      <div class="inline-flex p-3 bg-indigo-500/10 rounded-full mb-3 text-indigo-500<i data-lucide="gift" class="w-8 h-8"></i></div>
-      <h2 id="v-title" class="text-2xl font-bold mb-1">Giveaway Portal</h2>
-      <p class="text-sm text-slate500">Type the password from the YouTube video to check if you won.</p>
-    </div>
-    <div id="status" class="hidden mb-6 p-4 rounded-xl text-sm font-medium border fade-in"></div>
-    <form onsubmit="handleCheck(event class="space-y-4">
-      <input type="text" id="v-pass" required minlength="3" maxlength="8" placeholder="Enter secret password..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate700 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-wider focus:outline-none focus:border-indigo-500">
-      <button id="check-btn" type="submit" class="w-full bg-indigo-600 hover:bg-ind-500 text-white font-medium py-3 rounded-xl flex items-center justify-center space-x-2 disabled:opacity-50">
-        <i data-lucide="unlock" class="w-5 h-5"></i><span>Unlock My Reward</span>
-      </button>
-    </form>
- </div>
-
-  <!-- ADMIN VIEW -->
-  <div id="admin-view" class="hidden bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl fade">
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h2 id="a-title" class="text-2xl font-bold">Admin Dashboard</h2>
-        <p class="text-sm text-slate-500">Live giveaway statistics</p>
-      </div>
-      <div class="flex space-x-2">
-        <button type="button" onclick="loadAdmin()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-" title="Refresh"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
-        <button type="button" onclick="showView('creator')" class="p-2 rounded-xl bg-slate-100 dark:bg-slate- hover:bg-slate-200 dark:hover:bg-slate-700" title="Home"><i data-lucide="home" class="w-4 h-4"></i></button>
-      </div>
-    </div>
-    <div class="grid grid-cols-2 mdgrid-cols-4 gap-4 mb-6">
-      <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-        <p class="text-xs text-slate-500 uppercase"></p><p id="s-attempts" class="text-2xl font-bold mt-1">0</p>
-      </div>
-      <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-/30">
-        <p class="text-xs text-emerald-600 dark:text-emerald-400 uppercase">Winners</p><p id="s-winners" class="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">0</p>
-      </div>
-      <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-        <p class="text-xs text-slate-500 uppercase">Capacity</p><p id="-capacity" class="text-2xl font-bold mt-1"></p>
-      </div>
-      <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-        <p="text-xs text-slate-500 uppercase">Expires</p><p id="s-expiry" class="text-sm font-bold mt-2">-</p>
-      </div>
-    </div>
-    <div class="flex items-center justify-between mb-3">
-      <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500">Winners List</h
-
-<!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PassDrop - Instant YouTube Video Giveaways</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={darkMode:'class'}</script>
-<script src="https://unpkg.com/lucide@latest"></script>
-<style>
-  .fade-in{animation:fadeIn .4s ease}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-</style>
-</head>
-<body class="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
-
-<header class="border-b border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-950/50 backdrop-blur sticky top-0 z-50">
-  <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-    <div class="flex items-center space-x-2 cursor-pointer" onclick="showView('creator')">
-      <i data-lucide="gift" class="w-7 h-7 text-indigo-500"></i>
       <span class="text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">PassDrop</span>
     </div>
+    <span class="text-xs text-slate-500 border-l border-slate-700 pl-3 font-medium hidden sm:inline">by JAKA</span>
     <button type="button" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center space-x-1.5 text-xs font-medium">
       <i data-lucide="moon" id="icon-moon" class="w-4 h-4"></i>
       <i data-lucide="sun" id="icon-sun" class="w-4 h-4 hidden"></i>
@@ -269,8 +132,6 @@
       </div>
       <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
         <p class="text-xs text-slate-500 uppercase">Expires</p><p id="s-expiry" class="text-sm font-bold mt-2">-</p>
-     
-
       </div>
     </div>
 
@@ -307,7 +168,8 @@
 </main>
 
 <footer class="border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-400 dark:text-slate-600">
-  Powered by PassDrop • Instant Giveaway Links for Creators
+  Powered by PassDrop • Instant Giveaway Links for Creators <br>
+  <span class="text-indigo-400 font-medium">Built & Powered by JAKA</span>
 </footer>
 
 <script>
@@ -386,6 +248,7 @@ async function handleCreate(e){
   btn.disabled = true;
   try{
     const db = await loadDB();
+    if(!db.giveaways) db.giveaways = {};
     const id = makeId();
     const adminId = makeId();
     const now = new Date();
@@ -400,6 +263,7 @@ async function handleCreate(e){
       winners: 0,
       attempts: 0,
       adminId: adminId,
+      ipLogs: {},
       createdAt: now.toISOString(),
       expiresAt: expiry.toISOString()
     };
@@ -416,7 +280,7 @@ async function handleCreate(e){
   btn.disabled = false;
 }
 
-// ============ VIEWER ============
+// ============ VIEWER (WITH 2-HOUR COOLDOWN) ============
 async function handleCheck(e){
   e.preventDefault();
   const btn = document.getElementById('check-btn');
@@ -432,37 +296,77 @@ async function handleCheck(e){
       btn.disabled = false;
       return;
     }
-    g.attempts++;
 
-    const input = document.getElementById('v-pass').value.trim();
-    if(input.toLowerCase() !== g.password.toLowerCase()){
-      await saveDB(db);
-      showStatus("Incorrect password. Watch the video again and try another word!", "lose");
+    if(!g.ipLogs) g.ipLogs = {};
+    let clientId = localStorage.getItem("passdrop_client_id");
+    if(!clientId){
+      clientId = "client_" + Math.random().toString(36).substring(2, 10);
+      localStorage.setItem("passdrop_client_id", clientId);
+    }
+
+    let clientData = g.ipLogs[clientId] || { attempts: 0, cooldownUntil: 0 };
+    const currentTime = Date.now();
+
+    // Check 2-hour cooldown
+    if(currentTime < clientData.cooldownUntil){
+      const minutesLeft = Math.ceil((clientData.cooldownUntil - currentTime) / (1000 * 60));
+      showStatus(`Cooldown active! Please try again in ${minutesLeft} minute(s).`, "lose");
       btn.disabled = false;
       return;
     }
 
+    g.attempts++;
+    const input = document.getElementById('v-pass').value.trim();
+
+    // Wrong Password Check
+    if(input.toLowerCase() !== g.password.toLowerCase()){
+      clientData.attempts = (clientData.attempts || 0) + 1;
+
+      if(clientData.attempts >= 5){
+        clientData.cooldownUntil = currentTime + (2 * 60 * 60 * 1000); // 2 Hours
+        g.ipLogs[clientId] = clientData;
+        await saveDB(db);
+        showStatus("Too many incorrect attempts! Cooldown active for 2 hours.", "lose");
+        btn.disabled = false;
+        return;
+      }
+
+      g.ipLogs[clientId] = clientData;
+      await saveDB(db);
+      showStatus(`Incorrect password! (${5 - clientData.attempts} attempt(s) remaining)`, "lose");
+      btn.disabled = false;
+      return;
+    }
+
+    // Reset wrong attempts on correct password
+    clientData.attempts = 0;
+
     if(g.winners >= g.capacity){
+      g.ipLogs[clientId] = clientData;
       await saveDB(db);
       showStatus("Correct password — but all rewards have already been claimed!", "lose");
       btn.disabled = false;
       return;
     }
 
+    // Roll Win Probability
     if(Math.random() * 100 < g.probability){
       g.winners++;
+      g.ipLogs[clientId] = clientData;
       await saveDB(db);
       showStatus("🎉 Congratulations! You won! Redirecting to your reward...", "win");
       setTimeout(()=>{ window.location.href = g.url; }, 2000);
     } else {
+      // Non-winner: Trigger 2-hour cooldown
+      clientData.cooldownUntil = currentTime + (2 * 60 * 60 * 1000); // 2 Hours
+      g.ipLogs[clientId] = clientData;
       await saveDB(db);
-      showStatus("Correct password — but luck wasn't on your side this time. Try again!", "lose");
+      showStatus("Correct password, but you didn't win this time! Please try again after 2 hours.", "lose");
       btn.disabled = false;
     }
   }catch(err){
     showView('error');
   }
-  if(!btn.disabled) btn.disabled = false;
 }
 
 // ============ ADMIN ============
@@ -472,18 +376,20 @@ async function loadAdmin(){
   try{
     const db = await loadDB();
     let found = null;
-    for(const [id, g] of Object.entries(db.giveaways)){
-      if(g.adminId === CURRENT_ADMIN){ found = [id, g]; break; }
+    if(db.giveaways){
+      for(const [id, g] of Object.entries(db.giveaways)){
+        if(g.adminId === CURRENT_ADMIN){ found = [id, g]; break; }
+      }
     }
     if(!found){ showView('error'); return; }
 
     const [id, g] = found;
     window.ADMIN_GIVEAWAY = { id, ...g };
-    document.getElementById('s-attempts').textContent = g.attempts;
-    document.getElementById('s-winners').textContent = g.winners;
-    document.getElementById('s-capacity').textContent = g.capacity;
+    document.getElementById('s-attempts').textContent = g.attempts || 0;
+    document.getElementById('s-winners').textContent = g.winners || 0;
+    document.getElementById('s-capacity').textContent = g.capacity || 0;
     document.getElementById('s-expiry').textContent = new Date(g.expiresAt).toLocaleDateString();
-    document.getElementById('s-url').value = g.url;
+    document.getElementById('s-url').value = g.url || '';
     document.getElementById('settings-toggle-text').textContent = 'Edit Settings';
   }catch(err){
     showView('error');
@@ -532,7 +438,7 @@ const ADMIN_ID = params.get('a');
   if(GIVEAWAY_ID){
     try{
       const db = await loadDB();
-      const g = db.giveaways[GIVEAWAY_ID];
+      const g = db.giveaways ? db.giveaways[GIVEAWAY_ID] : null;
       if(!g || new Date() > new Date(g.expiresAt)){ showView('error'); }
       else{
         document.getElementById('v-title').textContent = g.name;
