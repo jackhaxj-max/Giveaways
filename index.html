@@ -9,16 +9,154 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
   .fade-in{animation:fadeIn .4s ease}
-  @keyframes fadeIn{from{opacity:0;transform:Y(8px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
-<body class="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration200">
+<body class="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
 
 <header class="border-b border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-950/50 backdrop-blur sticky top-0 z-50">
-  <div class="max-w-5xl mx-auto px-4 py4 flex justify-between items-center">
+  <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
     <div class="flex items-center space-x-2 cursor-pointer" onclick="showView('creator')">
       <i data-lucide="gift" class="w-7 h-7 text-indigo-500"></i>
-       class="text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">PassDrop</span>
+      <span class="text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text-transparent">PassDrop</span>
+    </div>
+    <button type="button" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center space-x1.5 text-xs font-medium">
+      <i data-lucide="moon" id="icon-moon" class="w-4 h-4"></i>
+      <i data-lucide="sun" id="icon-sun" class="w-4 h- hidden"></i>
+      <span id="theme-text">Light</span>
+    </button>
+  </div>
+</header>
+
+<main class="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
+
+  <!-- CREATOR VIEW -->
+  <div id="creator-view" class="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl">
+    <h1 class="text-2xl font-bold mb-2">Create a New Giveaway</h1>
+    <p class="text-sm text-slate-500 mb-6">Configure your video's giveaway link in seconds.</p>
+    <form onsubmit="handleCreate(event)" class="space-y-5">
+      <div>
+         class="block text-xs font-semibold uppercase tracking-wider mb-2">Giveaway Name</label>
+        <input type="text" id="g-name" required placeholder="e.g. Tech Giveaway Ep 45" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Destination URL (Reward Link)</label>
+        <input type="url" id="g-url" required placeholder="https://drive.google.com/..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4-3 text-sm focus:outline-none focus:border-indigo-500">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Secret Password (3-8 chars)</label>
+        <input type="text" id="g-pass" required minlength="3" maxlength="8" placeholder="e.g. WIN" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm fontono focus:outline-none focus:border-indigo-500">
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Winner</label>
+          <input type="number" id="g-cap" min="1" value="50" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3-sm focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Win Probability</label>
+          <select id="g-prob" class="w-full bg-slate50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
+            <option value="25">25%</option><option value="50" selected>50</option><option value="75">75%</option><option value="100">100%</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider mb-2Link Expires After</label>
+        <select id="g-exp" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo500">
+          <option value="1">1 Day</option><option value="3" selected>3 Days</option><option value="7">7 Days</option>
+        </select>
+      </div>
+      <button type="submit" id="gen-btn" class="w-full bgigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20 disabled:opacity-50">
+        <i data-lucide="link" class="w-5 h-"></i><span>Generate Giveaway Links</span>
+      </button>
+    </form>
+
+    <div id="created-result" class="hidden mt-6 p-5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30-xl space-y-4 fade-in">
+      <div class="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 font-medium text-sm">
+        <i data-lucide="check-circle" class="w-5 h-5"></i><span>Giveaway Created Successfully!</span>
+      </div>
+      <div>
+        <span class="block text-xs text-slate-500 mb-1">Public Viewer Link:</span>
+        <div class="flex space-x-2">
+          <input type="text" id="-link" readonly class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-mono">
+          <button type="button" onclick="copyVal('pub-link class="bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded-lg text-xs font-medium text-white">Copy</button>
+        </div>
+      </div>
+      <div>
+        <span class="block text-xs text-slate- mb-1">Private Admin Link (keep secret):</span>
+        <div class="flex space-x-2">
+          <input type="text" id="adm-link" readonly class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300:border-slate-700 rounded-lg px-3 py-2 text-xs font-mono">
+          <button type="button" onclick="copyVal('adm-link')" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg text-xs font-medium-white">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEWER VIEW -->
+  <div id="viewer-view" class="hidden bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate700/60 rounded-2xl p-6 md:p-8 shadow-2xl fade-in">
+    <div class="text-center mb-6">
+      <div class="inline-flex p-3 bg-indigo-500/10 rounded-full mb-3 text-indigo-500<i data-lucide="gift" class="w-8 h-8"></i></div>
+      <h2 id="v-title" class="text-2xl font-bold mb-1">Giveaway Portal</h2>
+      <p class="text-sm text-slate500">Type the password from the YouTube video to check if you won.</p>
+    </div>
+    <div id="status" class="hidden mb-6 p-4 rounded-xl text-sm font-medium border fade-in"></div>
+    <form onsubmit="handleCheck(event class="space-y-4">
+      <input type="text" id="v-pass" required minlength="3" maxlength="8" placeholder="Enter secret password..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate700 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-wider focus:outline-none focus:border-indigo-500">
+      <button id="check-btn" type="submit" class="w-full bg-indigo-600 hover:bg-ind-500 text-white font-medium py-3 rounded-xl flex items-center justify-center space-x-2 disabled:opacity-50">
+        <i data-lucide="unlock" class="w-5 h-5"></i><span>Unlock My Reward</span>
+      </button>
+    </form>
+ </div>
+
+  <!-- ADMIN VIEW -->
+  <div id="admin-view" class="hidden bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl fade">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 id="a-title" class="text-2xl font-bold">Admin Dashboard</h2>
+        <p class="text-sm text-slate-500">Live giveaway statistics</p>
+      </div>
+      <div class="flex space-x-2">
+        <button type="button" onclick="loadAdmin()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-" title="Refresh"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
+        <button type="button" onclick="showView('creator')" class="p-2 rounded-xl bg-slate-100 dark:bg-slate- hover:bg-slate-200 dark:hover:bg-slate-700" title="Home"><i data-lucide="home" class="w-4 h-4"></i></button>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 mdgrid-cols-4 gap-4 mb-6">
+      <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+        <p class="text-xs text-slate-500 uppercase"></p><p id="s-attempts" class="text-2xl font-bold mt-1">0</p>
+      </div>
+      <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-/30">
+        <p class="text-xs text-emerald-600 dark:text-emerald-400 uppercase">Winners</p><p id="s-winners" class="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">0</p>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+        <p class="text-xs text-slate-500 uppercase">Capacity</p><p id="-capacity" class="text-2xl font-bold mt-1"></p>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+        <p="text-xs text-slate-500 uppercase">Expires</p><p id="s-expiry" class="text-sm font-bold mt-2">-</p>
+      </div>
+    </div>
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500">Winners List</h
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PassDrop - Instant YouTube Video Giveaways</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class'}</script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  .fade-in{animation:fadeIn .4s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body class="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
+
+<header class="border-b border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-950/50 backdrop-blur sticky top-0 z-50">
+  <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-2 cursor-pointer" onclick="showView('creator')">
+      <i data-lucide="gift" class="w-7 h-7 text-indigo-500"></i>
+      <span class="text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">PassDrop</span>
     </div>
     <button type="button" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center space-x-1.5 text-xs font-medium">
       <i data-lucide="moon" id="icon-moon" class="w-4 h-4"></i>
@@ -28,366 +166,388 @@
   </div>
 </header>
 
-<main class="flex-1 max-w3xl mx-auto w-full px-4 py-8">
+<main class="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
 
   <!-- CREATOR VIEW -->
-  <div id="creator-view" class="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p6 md:p-8 shadow-2xl">
+  <div id="creator-view" class="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl">
     <h1 class="text-2xl font-bold mb-2">Create a New Giveaway</h1>
-    <p class="text-sm text-slate-500 mb-6">Configure your video's giveaway link in seconds.>
+    <p class="text-sm text-slate-500 mb-6">Configure your video's giveaway link in seconds.</p>
     <form onsubmit="handleCreate(event)" class="space-y-5">
       <div>
         <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Giveaway Name</label>
-        <input type="text" id="g-name" required="e.g. Tech Giveaway Ep 45" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
- </div>
+        <input type="text" id="g-name" required placeholder="e.g. Tech Giveaway Ep 45" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
+      </div>
       <div>
         <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Destination URL (Reward Link)</label>
-        <input type="url" id="g-url" required placeholder="https://drive.google.com/..." class="w bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
+        <input type="url" id="g-url" required placeholder="https://drive.google.com/..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
       </div>
       <div>
-        <label class="block-xs font-semibold uppercase tracking-wider mb-2">Secret Password (3-8 chars)</label>
-        <input type="text" id="g-pass" required minlength="3" maxlength="8" placeholder="e.g. WIN" class="w-full bg-slate-50:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-indigo-500">
+        <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Secret Password (3-8 chars)</label>
+        <input type="text" id="g-pass" required minlength="3" maxlength="8" placeholder="e.g. WIN" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-indigo-500">
       </div>
-      <div class="grid grid-cols-1 md:grid-cols2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Winner Capacity</label>
-          <input type="number" id="g-cap" min="1" value50" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
+          <input type="number" id="g-cap" min="1" value="50" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
         </div>
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Win Probability</label>
-          <select id="g-prob" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
-            <option value="25">25%</option><option value="50" selected>50%</option><option value="75">75%</option><option value="100">100%</option          </select>
+          <select id="g-prob" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
+            <option value="25">25%</option><option value="50" selected>50%</option><option value="75">75%</option><option value="100">100%</option>
+          </select>
         </div>
       </div>
       <div>
         <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Link Expires After</label>
-        <select id="g-exp" class="w-full bg-slate-50 dark:bglate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
-          <option value="1">1 Day</option><option value="3" selected>3 Days</option><option="7">7 Days</option>
+        <select id="g-exp" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
+          <option value="1">1 Day</option><option value="3" selected>3 Days</option><option value="7">7 Days</option>
         </select>
       </div>
-      <button type="submit" id="gen-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl flex items-center justify-center space-x2 shadow-lg shadow-indigo-600/20 disabled:opacity-50">
+      <button type="submit" id="gen-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20 disabled:opacity-50">
         <i data-lucide="link" class="w-5 h-5"></i><span>Generate Giveaway Links</span>
       </button>
     </form>
 
-    <div id="-result" class="hidden mt-6 p-5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 rounded-xl space-y-4 fade-in">
-      <div class="flex items-center space-2 text-emerald-600 dark:text-emerald-400 font-medium text-sm">
+    <div id="created-result" class="hidden mt-6 p-5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 rounded-xl space-y-4 fade-in">
+      <div class="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 font-medium text-sm">
         <i data-lucide="check-circle" class="w-5 h-5"></i><span>Giveaway Created Successfully!</span>
       </div>
       <div>
-         class="block text-xs text-slate-500 mb-1">Public Viewer Link:</span>
+        <span class="block text-xs text-slate-500 mb-1">Public Viewer Link:</span>
         <div class="flex space-x-2">
-          <input type="text" id="pub-link" readonly class="w-full bg-slate-100 dark:bg-slate- border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-mono">
-          <button type="button" onclick="copyVal('pub-link')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py2 rounded-lg text-xs font-medium text-white">Copy</button>
+          <input type="text" id="pub-link" readonly class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-mono">
+          <button type="button" onclick="copyVal('pub-link')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded-lg text-xs font-medium text-white">Copy</button>
         </div>
       </div>
       <div>
         <span class="block text-xs text-slate-500 mb-1">Private Admin Link (keep secret):</span>
-        <div class="flex space-x2">
+        <div class="flex space-x-2">
           <input type="text" id="adm-link" readonly class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-mono">
-           type="button" onclick="copyVal('adm-link')" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg text-xs font-medium text-white">Copy</button>
+          <button type="button" onclick="copyVal('adm-link')" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg text-xs font-medium text-white">Copy</button>
         </div>
       </div>
     </div>
-  </div  <!-- VIEWER VIEW -->
+  </div>
+
+  <!-- VIEWER VIEW -->
   <div id="viewer-view" class="hidden bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl fade-in">
- <div class="text-center mb-6">
-      <div class="inline-flex p-3 bg-indigo-500/10 rounded-full mb-3 text-indigo-500"><i data-lucide="gift" class="w-8-8"></i></div>
+    <div class="text-center mb-6">
+      <div class="inline-flex p-3 bg-indigo-500/10 rounded-full mb-3 text-indigo-500"><i data-lucide="gift" class="w-8 h-8"></i></div>
       <h2 id="v-title" class="text-2xl font-bold mb-1">Giveaway Portal</h2>
-      <p class="text-sm text-slate-500">Type the password from the YouTube video to check if you.</p>
+      <p class="text-sm text-slate-500">Type the password from the YouTube video to check if you won.</p>
     </div>
-    <div id="status" class="hidden mb-6 p-4 rounded-xl text-sm font-medium border fade-in">
-      <div id="status-text"></div>
-    </div>
-    <form onsubmit="handleCheck(event)" class="-y-4">
+    <div id="status" class="hidden mb-6 p-4 rounded-xl text-sm font-medium border fade-in"></div>
+    <form onsubmit="handleCheck(event)" class="space-y-4">
       <input type="text" id="v-pass" required minlength="3" maxlength="8" placeholder="Enter secret password..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-wider focus:outline-none focus:border-indigo-500">
-      <button id="check-btn" type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font py-3 rounded-xl flex items-center justify-center space-x-2 disabled:opacity-50">
+      <button id="check-btn" type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl flex items-center justify-center space-x-2 disabled:opacity-50">
         <i data-lucide="unlock" class="w-5 h-5"></i><span>Unlock My Reward</span>
       </button>
     </form>
-  </div  <!-- ADMIN VIEW -->
+  </div>
+
+  <!-- ADMIN VIEW -->
   <div id="admin-view" class="hidden bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl fade-in">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h2 class="text-2xl font-bold">Admin Dashboard</h2>
         <p class="text-sm text-slate-500">Live giveaway statistics</p>
       </div>
-       class="flex space-x-2">
-        <button type="button" onclick="loadAdmin()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-" title="Refresh"><i dataucide="refresh-cw" class="w-4 h-4"></i></button>
-        <button type="button" onclick="showView('creator')" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200:hover:bg-slate-700" title="Home"><i data-lucide="home" class="w-4 h-4"></i></button>
+      <div class="flex space-x-2">
+        <button type="button" onclick="loadAdmin()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700" title="Refresh"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
+        <button type="button" onclick="showView('creator')" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700" title="Home"><i data-lucide="home" class="w-4 h-4"></i></button>
       </div>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
       <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-        <p class="text-xs text-slate-500 uppercase">Attempts</p><p id="stempts" class="text-2xl font-bold mt-1">0</p>
+        <p class="text-xs text-slate-500 uppercase">Attempts</p><p id="s-attempts" class="text-2xl font-bold mt-1">0</p>
       </div>
       <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
-        <p class="text-xs text-emerald-600:text-emerald-400 uppercase">Winners</p><p id="s-winners" class="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">0</p>
+        <p class="text-xs text-emerald-600 dark:text-emerald-400 uppercase">Winners</p><p id="s-winners" class="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">0</p>
       </div>
-      <div class="p-4 rounded-xl-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+      <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
         <p class="text-xs text-slate-500 uppercase">Capacity</p><p id="s-capacity" class="text-2xl font-bold mt-1"></p>
       </div>
       <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-        <p class="text-xs text-slate-500 uppercase">Expires</p><p="s-expiry" class="text-sm font-bold mt-2">-</p>
+        <p class="text-xs text-slate-500 uppercase">Expires</p><p id="s-expiry" class="text-sm font-bold mt-2">-</p>
+     
+
       </div>
     </div>
-    <div class="flex items-center justify-between mb-3">
-      <h class="text-sm font-semibold uppercase tracking-wider text-slate-500">Winners List</h3>
-      <button type="button" onclick="copyWinners()" class="text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate
 
-
-200 dark:hover:bg-slate-700 rounded-lg px-3 py-1.5" title="Copy all winners"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
-    </div>
-    <div id="winners-list" class="space-y-2 max-h-72 overflow-y-auto text-sm">
-      <p class="text-slate-500 text-xs">No winners yet.</p>
-    </div>
-    <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
-      <p class="text-xs text-slate-500">Bin ID: <span id="f-binid" class="font-mono"></span></p>
-      <button type="button" onclick="deleteGiveaway()" class="text-xs text-red-500 hover:text-red-400 flex items-center space-x-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i><span>Delete Giveaway</span></button>
+    <div class="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-semibold text-sm uppercase tracking-wider text-slate-500">Settings</h3>
+        <button type="button" onclick="toggleSettings()" class="text-indigo-500 hover:text-indigo-400 flex items-center space-x-1 text-xs font-medium">
+          <i data-lucide="settings" class="w-4 h-4"></i><span id="settings-toggle-text">Edit Settings</span>
+        </button>
+      </div>
+      <div id="settings-body" class="hidden space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Destination URL</label>
+          <input type="url" id="s-url" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Change Password (3-8 chars)</label>
+          <input type="text" id="s-pass" maxlength="8" placeholder="Leave blank to keep current" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-indigo-500">
+        </div>
+        <button type="button" id="save-btn" onclick="handleSave()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-6 py-2.5 rounded-xl flex items-center space-x-2 disabled:opacity-50">
+          <i data-lucide="save" class="w-4 h-4"></i><span>Save Changes</span>
+        </button>
+      </div>
     </div>
   </div>
 
-  <p class="text-center text-xs text-slate-400 dark:text-slate-600 mt-8">PassDrop v1.0 · Made by JAKA · Powered by JSONBin</p>
+  <!-- ERROR VIEW -->
+  <div id="error-view" class="hidden bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-8 text-center shadow-2xl fade-in">
+    <div class="inline-flex p-3 bg-red-500/10 rounded-full mb-4 text-red-500"><i data-lucide="alert-triangle" class="w-8 h-8"></i></div>
+    <h2 class="text-xl font-bold mb-2">Link Not Found</h2>
+    <p class="text-sm text-slate-500 mb-6">This giveaway link is invalid, expired, or has been removed.</p>
+    <button type="button" onclick="showView('creator')" class="text-indigo-500 hover:text-indigo-400 text-sm font-medium">← Back to Home</button>
+  </div>
 </main>
 
+<footer class="border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-400 dark:text-slate-600">
+  Powered by PassDrop • Instant Giveaway Links for Creators
+</footer>
+
 <script>
-// ===== CONFIG =====
-const BIN_ID = '6acf87d6ffd5d160536a857c';
-const MASTER_KEY = '$2a$10$ISVxVv0EISYA6qDaLLhr4eDPlxx9QVu3taLGbRXIU5uaxUPBaYW4G';
-// ⚠️ PASTE YOUR REAL X-MASTER-KEY ABOVE (Part 2 will also set this - use this line)
+// ============ CONFIG ============
+const BIN_ID  = "PASTE_YOUR_NEW_BIN_ID_HERE";
+const MASTER  = "PASTE_YOUR_NEW_MASTER_KEY_HERE";
+const API_URL = "https://api.jsonbin.io/v3/b/" + BIN_ID;
 
-const API = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
-
-// ===== HELPERS =====
-function lucideInit(){ if(window.lucide) lucide.createIcons(); }
-function copyVal(id){ const el=document.getElementById(id); el.select(); document.execCommand('copy'); }
-function showView(name){
-  ['creator','viewer','admin'].forEach(v=>{
-    document.getElementById(v+'-view').classList.toggle('hidden', v!==name);
+// ============ HELPERS ============
+function lucideIcons(){ if(window.lucide) lucide.createIcons(); }
+function copyVal(id){
+  const el = document.getElementById(id);
+  el.select();
+  navigator.clipboard.writeText(el.value).then(()=>{
+    const btn = el.nextElementSibling;
+    const old = btn.textContent;
+    btn.textContent = "Copied!";
+    setTimeout(()=>btn.textContent = old, 1500);
   });
-  window.scrollTo(0,0); lucideInit();
 }
 function toggleTheme(){
-  document.documentElement.classList.toggle('dark');
-  const dark=document.documentElement.classList.contains('dark');
-  document.getElementById('icon-moon').classList.toggle('hidden', !dark);
-  document.getElementById('icon-sun').classList.toggle('hidden', dark);
-  document.getElementById('theme-text').textContent = dark?'Light':'Dark';
+  const html = document.documentElement;
+  html.classList.toggle('dark');
+  const isDark = html.classList.contains('dark');
+  document.getElementById('icon-moon').classList.toggle('hidden', isDark);
+  document.getElementById('icon-sun').classList.toggle('hidden', !isDark);
+  document.getElementById('theme-text').textContent = isDark ? 'Dark' : 'Light';
+}
+function showView(name){
+  ['creator','viewer','admin','error'].forEach(v=>{
+    document.getElementById(v+'-view').classList.add('hidden');
+  });
+  document.getElementById(name+'-view').classList.remove('hidden');
+  lucideIcons();
+}
+function showStatus(msg, type){
+  const box = document.getElementById('status');
+  box.classList.remove('hidden');
+  box.classList.remove('bg-emerald-50','dark:bg-emerald-950/40','border-emerald-500/30','text-emerald-600','dark:text-emerald-400',
+                       'bg-red-50','dark:bg-red-950/40','border-red-500/30','text-red-600','dark:text-red-400');
+  if(type==='win'){
+    box.classList.add('bg-emerald-50','dark:bg-emerald-950/40','border','border-emerald-500/30','text-emerald-600','dark:text-emerald-400');
+  } else {
+    box.classList.add('bg-red-50','dark:bg-red-950/40','border','border-red-500/30','text-red-600','dark:text-red-400');
+  }
+  box.textContent = msg;
 }
 
-// ===== API =====
-async function readBin(){
-  const r = await fetch(API+'/latest', {headers:{'X-Master-Key':MASTER_KEY}});
-  if(!r.ok) throw new Error('Read failed: '+r.status);
-  const j = await r.json();
-  return j.record || {};
+// ============ STORAGE ============
+async function loadDB(){
+  const res = await fetch(API_URL + "/latest", {
+    headers: { "X-Master-Key": MASTER }
+  });
+  if(!res.ok) throw new Error("Failed to load database");
+  const json = await res.json();
+  return json.record;
 }
-async function writeBin(data){
-  const r = await fetch(API, {
-    method:'PUT',
-    headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},
+async function saveDB(data){
+  const res = await fetch(API_URL, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Master-Key": MASTER
+    },
     body: JSON.stringify(data)
   });
-  if(!r.ok) throw new Error('Write failed: '+r.status);
-}
-</script>
-// ===== URL ROUTING =====
-function getParams(){
-  const p = new URLSearchParams(window.location.search);
-  return {
-    id: p.get('id'),
-    admin: p.get('admin') === '1'
-  };
+  if(!res.ok) throw new Error("Failed to save database");
 }
 
-// ===== CREATOR =====
+// ============ CREATOR ============
+function makeId(){ return Math.random().toString(36).substring(2,10); }
+
 async function handleCreate(e){
   e.preventDefault();
   const btn = document.getElementById('gen-btn');
   btn.disabled = true;
-  const name = document.getElementById('g-name').value.trim();
-  const url = document.getElementById('g-url').value.trim();
-  const pass = document.getElementById('g-pass').value.trim();
-  const cap = parseInt(document.getElementById('g-cap').value);
-  const prob = parseInt(document.getElementById('g-prob').value);
-  const expDays = parseInt(document.getElementById('g-exp').value);
+  try{
+    const db = await loadDB();
+    const id = makeId();
+    const adminId = makeId();
+    const now = new Date();
+    const expiry = new Date(now.getTime() + parseInt(document.getElementById('g-exp').value) * 86400000);
 
-  try {
-    const data = await readBin();
-    const gid = 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-    data[gid] = {
-      name: name,
-      url: url,
-      pass: pass.toLowerCase(),
-      cap: cap,
-      prob: prob,
-      created: Date.now(),
-      expires: Date.now() + expDays*24*60*60*1000,
-      winners: []
+    db.giveaways[id] = {
+      name: document.getElementById('g-name').value.trim(),
+      url: document.getElementById('g-url').value.trim(),
+      password: document.getElementById('g-pass').value.trim(),
+      capacity: parseInt(document.getElementById('g-cap').value),
+      probability: parseInt(document.getElementById('g-prob').value),
+      winners: 0,
+      attempts: 0,
+      adminId: adminId,
+      createdAt: now.toISOString(),
+      expiresAt: expiry.toISOString()
     };
-    await writeBin(data);
+    await saveDB(db);
 
-    const base = window.location.origin + window.location.pathname;
-    document.getElementById('pub-link').value = base + '?id=' + gid;
-    document.getElementById('adm-link').value = base + '?id=' + gid + '&admin=1';
+    const base = location.origin + location.pathname;
+    document.getElementById('pub-link').value = base + "?g=" + id;
+    document.getElementById('adm-link').value = base + "?a=" + adminId;
     document.getElementById('created-result').classList.remove('hidden');
-    lucideInit();
-  } catch(err){
-    alert('Error creating giveaway: ' + err.message);
-  } finally {
-    btn.disabled = false;
+    lucideIcons();
+  }catch(err){
+    alert("Error: " + err.message);
   }
+  btn.disabled = false;
 }
 
-// ===== VIEWER =====
+// ============ VIEWER ============
 async function handleCheck(e){
   e.preventDefault();
-  const {id} = getParams();
   const btn = document.getElementById('check-btn');
-  const input = document.getElementById('v-pass');
   btn.disabled = true;
-  showStatus('loading', 'Checking your entry...');
+  try{
+    const db = await loadDB();
+    const g = db.giveaways[GIVEAWAY_ID];
+    if(!g) throw new Error("notfound");
 
-  try {
-    const data = await readBin();
-    const g = data[id];
+    const now = new Date();
+    if(now > new Date(g.expiresAt)){
+      showStatus("This giveaway has expired.", "lose");
+      btn.disabled = false;
+      return;
+    }
+    g.attempts++;
 
-    if(!g){ showStatus('error', 'Giveaway not found. Check your link.'); return; }
-    if(Date.now() > g.expires){ showStatus('error', '⏰ This giveaway has expired.'); return; }
-    if(g.winners.length >= g.cap){ showStatus('error', '😢 All rewards have been claimed. Better luck next time!'); return; }
-
-    if(input.value.trim().toLowerCase() !== g.pass){
-      showStatus('error', '❌ Wrong password. Watch the video again for the hint!');
+    const input = document.getElementById('v-pass').value.trim();
+    if(input.toLowerCase() !== g.password.toLowerCase()){
+      await saveDB(db);
+      showStatus("Incorrect password. Watch the video again and try another word!", "lose");
+      btn.disabled = false;
       return;
     }
 
-    // correct password -> roll probability
-    if(Math.random()*100 > g.prob){
-      showStatus('lose', '😔 Not a winner this time. Try again with the same password!');
+    if(g.winners >= g.capacity){
+      await saveDB(db);
+      showStatus("Correct password — but all rewards have already been claimed!", "lose");
+      btn.disabled = false;
       return;
     }
 
-    // winner -> record & reveal
-    if(g.winners.some(w => w.device === getDeviceId())){
-      // already claimed on this device
+    if(Math.random() * 100 < g.probability){
+      g.winners++;
+      await saveDB(db);
+      showStatus("🎉 Congratulations! You won! Redirecting to your reward...", "win");
+      setTimeout(()=>{ window.location.href = g.url; }, 2000);
     } else {
-      g.winners.push({ device: getDeviceId(), time: Date.now() });
-      await writeBin(data);
+      await saveDB(db);
+      showStatus("Correct password — but luck wasn't on your side this time. Try again!", "lose");
+      btn.disabled = false;
     }
-    showStatus('win', '🎉 CONGRATULATIONS! You are a winner! Your reward link: <a href="' + g.url + '" target="_blank" class="underline font-bold text-emerald-600 dark:text-emerald-400">CLICK HERE TO CLAIM</a>');
-  } catch(err){
-    showStatus('error', 'Connection error. Please try again.');
-  } finally {
-    btn.disabled = false;
+  }catch(err){
+    showView('error');
   }
+  if(!btn.disabled) btn.disabled = false;
 }
 
-function getDeviceId(){
-  let id = localStorage.getItem('pd_device');
-  if(!id){ id = 'd' + Math.random().toString(36); localStorage.setItem('pd_device', id); }
-  return id;
-}
+// ============ ADMIN ============
+let CURRENT_ADMIN = null;
 
-function showStatus(type, html){
-  const box = document.getElementById('status');
-  const colors = {
-    loading: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-600 dark:text-indigo-400',
-    error: 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400',
-    lose: 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400',
-    win: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
-  };
-  box.className = 'mb-6 p-4 rounded-xl text-sm font-medium border fade-in ' + colors[type];
-  box.innerHTML = html;
-}
-
-// ===== ADMIN =====
 async function loadAdmin(){
-  const {id} = getParams();
-  try {
-    const data = await readBin();
-    const g = data[id];
-    if(!g){ alert('Giveaway not found'); return; }
-    document.getElementById('v-title').textContent = g.name; // reused for admin title context
-    document.getElementById('s-attempts').textContent = g.winners.length; // simplified stat
-    document.getElementById('s-winners').textContent = g.winners.length;
-    document.getElementById('s-capacity').textContent = g.cap;
-    document.getElementById('s-expiry').textContent = new Date(g.expires).toLocaleDateString();
-    document.getElementById('f-binid').textContent = BIN_ID;
-
-    const list = document.getElementById('winners-list');
-    if(g.winners.length === 0){
-      list.innerHTML = '<p class="text-slate-500 text-xs">No winners yet.</p>';
-    } else {
-      list.innerHTML = g.winners.map((w,i) =>
-        '<div class="flex justify-between items-center p-2 rounded-lg bg-slate-100 dark:bg-slate-900">' +
-        '<span>#'+(i+1)+' · '+w.device+'</span>' +
-        '<span class="text-xs text-slate-500">'+new Date(w.time).toLocaleString()+'</span></div>'
-      ).join('');
+  try{
+    const db = await loadDB();
+    let found = null;
+    for(const [id, g] of Object.entries(db.giveaways)){
+      if(g.adminId === CURRENT_ADMIN){ found = [id, g]; break; }
     }
-    window.__winners = g.winners;
-  } catch(err){
-    alert('Failed to load: ' + err.message);
+    if(!found){ showView('error'); return; }
+
+    const [id, g] = found;
+    window.ADMIN_GIVEAWAY = { id, ...g };
+    document.getElementById('s-attempts').textContent = g.attempts;
+    document.getElementById('s-winners').textContent = g.winners;
+    document.getElementById('s-capacity').textContent = g.capacity;
+    document.getElementById('s-expiry').textContent = new Date(g.expiresAt).toLocaleDateString();
+    document.getElementById('s-url').value = g.url;
+    document.getElementById('settings-toggle-text').textContent = 'Edit Settings';
+  }catch(err){
+    showView('error');
   }
 }
 
-function copyWinners(){
-  if(!window.__winners || !window.__winners.length){ alert('No winners to copy'); return; }
-  const text = window.__winners.map((w,i)=>(i+1)+'. '+w.device+' - '+new Date(w.time).toLocaleString()).join('\n');
-  navigator.clipboard.writeText(text).then(()=>alert('Winners copied!'));
+function toggleSettings(){
+  const body = document.getElementById('settings-body');
+  body.classList.toggle('hidden');
+  document.getElementById('settings-toggle-text').textContent =
+    body.classList.contains('hidden') ? 'Edit Settings' : 'Close';
 }
 
-async function deleteGiveaway(){
-  const {id} = getParams();
-  if(!confirm('Delete this giveaway permanently?')) return;
-  try {
-    const data = await readBin();
-    delete data[id];
-    await writeBin(data);
-    alert('Deleted. Redirecting home...');
-    window.location.href = window.location.pathname;
-  } catch(err){ alert('Delete failed: '+err.message); }
-}
-// ===== BOOT =====
-(function init(){
-  const {id, admin} = getParams();
+async function handleSave(){
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  try{
+    const db = await loadDB();
+    const g = db.giveaways[window.ADMIN_GIVEAWAY.id];
+    if(!g) throw new Error("notfound");
 
-  if(id && admin){
-    // Admin dashboard
+    const newUrl = document.getElementById('s-url').value.trim();
+    if(newUrl) g.url = newUrl;
+
+    const newPass = document.getElementById('s-pass').value.trim();
+    if(newPass){
+      if(newPass.length < 3){ alert("Password must be at least 3 characters."); btn.disabled=false; return; }
+      g.password = newPass;
+    }
+    await saveDB(db);
+    document.getElementById('s-pass').value = "";
+    alert("Settings saved successfully!");
+    await loadAdmin();
+  }catch(err){
+    alert("Error: " + err.message);
+  }
+  btn.disabled = false;
+}
+
+// ============ ROUTER ============
+const params = new URLSearchParams(location.search);
+const GIVEAWAY_ID = params.get('g');
+const ADMIN_ID = params.get('a');
+
+(async function init(){
+  if(GIVEAWAY_ID){
+    try{
+      const db = await loadDB();
+      const g = db.giveaways[GIVEAWAY_ID];
+      if(!g || new Date() > new Date(g.expiresAt)){ showView('error'); }
+      else{
+        document.getElementById('v-title').textContent = g.name;
+        showView('viewer');
+      }
+    }catch(err){ showView('error'); }
+  } else if(ADMIN_ID){
+    CURRENT_ADMIN = ADMIN_ID;
     showView('admin');
-    loadAdmin();
-  } else if(id){
-    // Viewer portal
-    showView('viewer');
-    // Pre-load giveaway title if bin is readable
-    readBin().then(data=>{
-      const g = data[id];
-      if(g) document.getElementById('v-title').textContent = g.name;
-    }).catch(()=>{});
+    await loadAdmin();
   } else {
-    // Creator home
     showView('creator');
   }
-
-  // Restore theme preference
-  const saved = localStorage.getItem('pd_theme');
-  if(saved === 'light'){
-    document.documentElement.classList.remove('dark');
-    document.getElementById('icon-moon').classList.remove('hidden');
-    document.getElementById('icon-sun').classList.add('hidden');
-    document.getElementById('theme-text').textContent = 'Dark';
-  }
-  toggleThemeSafe();
-
-  lucideInit();
+  lucideIcons();
 })();
-
-function toggleThemeSafe(){
-  const dark = document.documentElement.classList.contains('dark');
-  localStorage.setItem('pd_theme', dark ? 'dark' : 'light');
-}
-
-// Save theme on every toggle (wrap original)
-const _origToggle = toggleTheme;
-toggleTheme = function(){ _origToggle(); toggleThemeSafe(); };
 </script>
 </body>
 </html>
