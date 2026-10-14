@@ -388,70 +388,103 @@
         }
 
         // --- VIEWER: Validate Password & Roll Probability ---
+       // --- VIEWER: Validate Password, Roll Probability & Apply 2-Hour Cooldown ---
         async function handleCheckPassword(e) {
             if (e) e.preventDefault();
             const inputPass = document.getElementById("viewer-pass").value.trim();
             const gw = window.currentGiveawayData;
             if (!gw) return false;
 
-            if (inputPass !== gw.password) {
-                showTopBanner("error", "Incorrect password! Please check the video and try again.");
+            // Ensure ipLogs object exists
+            if (!gw.ipLogs) gw.ipLogs = {};
+
+            // Generate or retrieve a persistent client ID for this browser
+            let clientId = localStorage.getItem("passdrop_client_id");
+            if (!clientId) {
+                clientId = "client_" + Math.random().toString(36).substring(2, 10);
+                localStorage.setItem("passdrop_client_id", clientId);
+            }
+
+            let clientData = gw.ipLogs[clientId] || { attempts: 0, cooldownUntil: 0 };
+            const now = Date.now();
+
+            // 1. Check if user is currently locked in a 2-hour cooldown
+            if (now < clientData.cooldownUntil) {
+                const minutesLeft = Math.ceil((clientData.cooldownUntil - now) / (1000 * 60));
+                showTopBanner("warning", `Cooldown active! Please try again in ${minutesLeft} minute(s).`);
                 return false;
             }
 
+            // 2. Validate Password
+            if (inputPass !== gw.password) {
+                clientData.attempts = (clientData.attempts || 0) + 1;
+                
+                // If 5 wrong attempts, trigger 2-hour lockout
+                if (clientData.attempts >= 5) {
+                    clientData.cooldownUntil = now + (2 * 60 * 60 * 1000); // 2 Hours
+                    gw.ipLogs[clientId] = clientData;
+                    await updateCloudBin(gw);
+
+                    showTopBanner("error", "Too many incorrect attempts! Cooldown active for 2 hours.");
+                    return false;
+                }
+
+                gw.ipLogs[clientId] = clientData;
+                await updateCloudBin(gw);
+
+                showTopBanner("error", `Incorrect password! (${5 - clientData.attempts} attempt(s) remaining)`);
+                return false;
+            }
+
+            // Reset wrong password attempts counter on correct password entry
+            clientData.attempts = 0;
+
+            // 3. Check Capacity Limit
             if (gw.currentWinners >= gw.maxWinners) {
                 showTopBanner("warning", "Giveaway Over! The maximum winner limit has been reached.");
                 return false;
             }
 
+            // 4. Roll Win Probability
             const roll = Math.random() * 100;
             const didWin = roll < gw.probability;
 
             if (didWin) {
                 gw.currentWinners += 1;
-                try {
-                    await fetch(`https://api.jsonbin.io/v3/b/${currentBinId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Master-Key': JSONBIN_MASTER_KEY
-                        },
-                        body: JSON.stringify(gw)
-                    });
-                } catch (err) {}
+                gw.ipLogs[clientId] = clientData;
+                await updateCloudBin(gw);
 
                 showTopBanner("success", "🎉 CONGRATULATIONS! YOU WON! Redirecting to your prize...");
                 setTimeout(() => {
                     window.location.href = gw.destination;
                 }, 2000);
             } else {
-                showTopBanner("warning", "You did not win this time! Please try again.");
+                // Did not win: Trigger 2-hour cooldown before next attempt
+                clientData.cooldownUntil = now + (2 * 60 * 60 * 1000); // 2 Hours
+                gw.ipLogs[clientId] = clientData;
+                await updateCloudBin(gw);
+
+                showTopBanner("warning", "You did not win this time! Please try again after 2 hours.");
             }
 
             return false;
         }
 
-        function showTopBanner(type, message) {
-            const banner = document.getElementById("top-status-banner");
-            const text = document.getElementById("top-status-text");
-            const icon = document.getElementById("top-status-icon");
-
-            banner.classList.remove("hidden");
-            text.innerText = message;
-
-            if (type === "success") {
-                banner.className = "mb-6 p-4 rounded-xl text-sm font-medium border bg-emerald-950/50 text-emerald-300 border-emerald-500/30 flex items-start space-x-3";
-                icon.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>';
-            } else if (type === "warning") {
-                banner.className = "mb-6 p-4 rounded-xl text-sm font-medium border bg-amber-950/50 text-amber-300 border-amber-500/30 flex items-start space-x-3";
-                icon.innerHTML = '<i data-lucide="clock" class="w-5 h-5 text-amber-400"></i>';
-            } else {
-                banner.className = "mb-6 p-4 rounded-xl text-sm font-medium border bg-red-950/50 text-red-300 border-red-500/30 flex items-start space-x-3";
-                icon.innerHTML = '<i data-lucide="alert-circle" class="w-5 h-5 text-red-400"></i>';
+        // Helper function to sync updated data to JSONBin cloud
+        async function updateCloudBin(gwData) {
+            try {
+                await fetch(`https://api.jsonbin.io/v3/b/${currentBinId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_MASTER_KEY
+                    },
+                    body: JSON.stringify(gwData)
+                });
+            } catch (err) {
+                console.error("Cloud update failed:", err);
             }
-            if (window.lucide) lucide.createIcons();
         }
-
         // --- ADMIN DASHBOARD: Load individual session stats ---
         async function loadAdminDashboard() {
             const notice = document.getElementById("admin-notice");
