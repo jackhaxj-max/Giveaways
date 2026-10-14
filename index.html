@@ -122,14 +122,6 @@
                             <button type="button" onclick="copyLink('shareable-link')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded-lg font-medium transition text-white">Copy</button>
                         </div>
                     </div>
-
-                    <div>
-                        <span class="block text-slate-600 dark:text-slate-400 font-medium mb-1">Private Admin Dashboard Link (Expires in 10 Days):</span>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="admin-shareable-link" readonly class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-300 font-mono">
-                            <button type="button" onclick="copyLink('admin-shareable-link')" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg font-medium transition text-white">Copy</button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -167,7 +159,7 @@
             </div>
         </div>
 
-        <!-- ================= VIEW 3: MASTER LOGIN MODAL / VIEW ================= -->
+        <!-- ================= VIEW 3: MASTER LOGIN MODAL ================= -->
         <div id="master-login-view" class="hidden max-w-md mx-auto bg-slate-800/40 dark:bg-slate-800/40 bg-white border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur">
             <div class="text-center mb-6">
                 <div class="inline-flex p-3 bg-indigo-500/10 rounded-full mb-3 text-indigo-400">
@@ -250,21 +242,21 @@
 
     <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
     <script>
-        // CONFIGURATION: JSONBin Master Key & Portal Credentials
+        // CONFIGURATION: Credentials for JSONBin and Master Spreadsheet
         const JSONBIN_MASTER_KEY = "$2a$10$yvbDpRB/vVpoc/7/Yb5rt.55iF68Dg6JKEj.Lp80bouj4nm8IAuSS";
         const MASTER_PORTAL_USER = "yajamani";
         const MASTER_PORTAL_PASS = "Dairy30$0";
 
-        let currentGiveawayId = null;
+        let currentBinId = null;
 
-        // Runs on initial page load
+        // Initialize Lucide icons and check if URL has ?g=... parameter on load
         document.addEventListener("DOMContentLoaded", () => {
             if (window.lucide) lucide.createIcons();
             initTheme();
             checkUrlParams();
         });
 
-        // Toggle between Dark and Light themes
+        // Theme initialization and toggle handlers
         function initTheme() {
             const isDark = localStorage.getItem("theme") !== "light";
             if (isDark) {
@@ -304,25 +296,25 @@
             }
         }
 
-        // Hide all views and return to the main creator form
+        // Return to creator view by clearing URL parameters
         function showCreatorView() {
             window.location.href = window.location.pathname;
         }
 
-        // Check URL parameters (?g=... or ?admin=...) to determine which view to display
+        // Check if URL contains a giveaway viewer parameter (?g=BIN_ID)
         function checkUrlParams() {
             const urlParams = new URLSearchParams(window.location.search);
             const gId = urlParams.get('g');
 
             if (gId) {
-                currentGiveawayId = gId;
+                currentBinId = gId;
                 hideAllViews();
                 document.getElementById("viewer-view").classList.remove("hidden");
                 loadViewerGiveaway();
             }
         }
 
-        // Helper to hide all primary view containers
+        // Hide all major containers
         function hideAllViews() {
             document.getElementById("creator-view").classList.add("hidden");
             document.getElementById("viewer-view").classList.add("hidden");
@@ -330,13 +322,13 @@
             document.getElementById("master-spreadsheet-view").classList.add("hidden");
         }
 
-        // Open Master Login Screen
+        // Open Master Login screen
         function openMasterLogin() {
             hideAllViews();
             document.getElementById("master-login-view").classList.remove("hidden");
         }
 
-        // Validate Master Credentials and Open Spreadsheet Dashboard
+        // Validate Master credentials (`yajamani` / `Dairy30$0`)
         function handleMasterLogin(e) {
             e.preventDefault();
             const u = document.getElementById("login-user").value.trim();
@@ -351,7 +343,7 @@
             }
         }
 
-        // CREATOR: Generate Giveaway and save to JSONBin cloud
+        // CREATOR: Save new giveaway directly as a JSONBin cloud record
         async function handleCreateGiveaway(e) {
             if (e) e.preventDefault();
 
@@ -371,16 +363,10 @@
             genBtn.innerText = "Creating Cloud Giveaway...";
             genBtn.disabled = true;
 
-            const giveawayId = 'g_' + Math.random().toString(36).substring(2, 9);
-            const adminId = 'adm_' + Math.random().toString(36).substring(2, 9);
-
             const now = Date.now();
             const viewerExpiresAt = now + (expiryDays * 24 * 60 * 60 * 1000);
-            const adminExpiresAt = now + (10 * 24 * 60 * 60 * 1000);
 
             const giveawayData = {
-                id: giveawayId,
-                adminId: adminId,
                 name: name,
                 destination: destUrl,
                 password: passCode,
@@ -388,9 +374,7 @@
                 probability: probability,
                 currentWinners: 0,
                 viewerExpiresAt: viewerExpiresAt,
-                adminExpiresAt: adminExpiresAt,
-                isClosedEarly: false,
-                ipLogs: {}
+                isClosedEarly: false
             };
 
             try {
@@ -410,12 +394,9 @@
                 const result = await response.json();
                 const binId = result.metadata.id;
 
-                const cloudViewerId = giveawayId + "_" + binId;
-                const cloudAdminId = adminId + "_" + binId;
-
+                // Build clean public link using the direct bin ID
                 const origin = window.location.origin + window.location.pathname;
-                document.getElementById("shareable-link").value = origin + '?g=' + cloudViewerId;
-                document.getElementById("admin-shareable-link").value = origin + '?admin=' + cloudAdminId;
+                document.getElementById("shareable-link").value = origin + '?g=' + binId;
 
                 const resBox = document.getElementById("created-result");
                 resBox.classList.remove("hidden");
@@ -428,6 +409,7 @@
             }
         }
 
+        // Utility to copy shareable link to clipboard
         function copyLink(elementId) {
             const input = document.getElementById(elementId);
             input.select();
@@ -435,24 +417,20 @@
             alert("Link copied to clipboard!");
         }
 
-        // VIEWER: Load giveaway details from cloud bin
+        // VIEWER: Fetch giveaway data directly using the bin ID from URL
         async function loadViewerGiveaway() {
             const form = document.getElementById("viewer-form");
             let gw = null;
 
-            const parts = currentGiveawayId.split('_');
-            if (parts.length >= 3) {
-                const binId = parts.slice(2).join('_');
-                try {
-                    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                        headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        gw = data.record;
-                    }
-                } catch (e) {}
-            }
+            try {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${currentBinId}`, {
+                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    gw = data.record;
+                }
+            } catch (e) {}
 
             if (!gw) {
                 showTopBanner("error", "Error: Giveaway link not found or expired.");
@@ -461,7 +439,6 @@
             }
 
             window.currentGiveawayData = gw;
-            window.currentBinId = parts.slice(2).join('_');
             document.getElementById("viewer-title").innerText = gw.name;
 
             if (gw.isClosedEarly || Date.now() > gw.viewerExpiresAt) {
@@ -478,16 +455,8 @@
             const gw = window.currentGiveawayData;
             if (!gw) return false;
 
-            const clientIP = "user_browser_client";
-            let ipData = gw.ipLogs[clientIP] || { attempts: 0, cooldownUntil: 0 };
-
             if (inputPass !== gw.password) {
-                ipData.attempts += 1;
-                if (ipData.attempts >= 5) {
-                    showTopBanner("error", "Too many incorrect attempts. Cooldown active for 2 hours.");
-                    return false;
-                }
-                showTopBanner("error", `Incorrect password! (${5 - ipData.attempts} attempts remaining)`);
+                showTopBanner("error", "Incorrect password! Please check the video and try again.");
                 return false;
             }
 
@@ -502,7 +471,7 @@
             if (didWin) {
                 gw.currentWinners += 1;
                 try {
-                    await fetch(`https://api.jsonbin.io/v3/b/${window.currentBinId}`, {
+                    await fetch(`https://api.jsonbin.io/v3/b/${currentBinId}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -517,13 +486,13 @@
                     window.location.href = gw.destination;
                 }, 2000);
             } else {
-                showTopBanner("warning", "You did not win this time! Please try again after 1 hour.");
+                showTopBanner("warning", "You did not win this time! Please try again.");
             }
 
             return false;
         }
 
-        // Helper to display top banners
+        // Helper to display notifications in top banner
         function showTopBanner(type, message) {
             const banner = document.getElementById("top-status-banner");
             const text = document.getElementById("top-status-text");
@@ -545,12 +514,13 @@
             if (window.lucide) lucide.createIcons();
         }
 
-        // MASTER SPREADSHEET: Fetch all bins and render spreadsheet table
+        // MASTER SPREADSHEET: Render all active giveaways in a spreadsheet table
         async function loadMasterSpreadsheet() {
             const tbody = document.getElementById("spreadsheet-tbody");
             tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Loading spreadsheet records from cloud...</td></tr>`;
 
             try {
+                // Fetch list of recent bins from JSONBin
                 const res = await fetch("https://api.jsonbin.io/v3/b?meta=false", {
                     headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
                 });
@@ -559,9 +529,7 @@
                 const bins = await res.json();
 
                 tbody.innerHTML = "";
-
-                // Filter valid giveaway objects
-                const giveaways = bins.filter(b => b && b.id && b.name);
+                const giveaways = Array.isArray(bins) ? bins.filter(b => b && b.name && b.password) : [];
 
                 if (giveaways.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">No giveaways created yet.</td></tr>`;
@@ -583,7 +551,7 @@
                         <td class="p-4">${gw.probability}%</td>
                         <td class="p-4">${statusBadge}</td>
                         <td class="p-4 text-right">
-                            <a href="${gw.destination}" target="_blank" class="text-indigo-400 hover:underline text-xs font-medium mr-3">Reward Link</a>
+                            <a href="${gw.destination}" target="_blank" class="text-indigo-400 hover:underline text-xs font-medium">Reward Link</a>
                         </td>
                     `;
                     tbody.appendChild(tr);
