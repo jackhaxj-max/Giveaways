@@ -1,582 +1,393 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PassDrop - Instant YouTube Video Giveaways</title>
-    <!-- Tailwind CSS CDN for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
-    </script>
-    <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PassDrop - Instant YouTube Video Giveaways</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class'}</script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  .fade-in{animation:fadeIn .4s ease}
+  @keyframes fadeIn{from{opacity:0;transform:Y(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
 </head>
-<body class="bg-slate-900 text-slate-100 dark:bg-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
+<body class="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration200">
 
-    <!-- ================= NAVIGATION HEADER ================= -->
-    <header class="border-b border-slate-800 bg-slate-950/50 backdrop-blur sticky top-0 z-50">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="flex items-center space-x-2 cursor-pointer" onclick="showCreatorView()">
-                    <i data-lucide="gift" class="w-7 h-7 text-indigo-500"></i>
-                    <span class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">PassDrop</span>
-                </div>
-                <span class="text-xs text-slate-500 border-l border-slate-700 pl-3 font-medium hidden sm:inline">by JAKA</span>
-            </div>
-            
-            <!-- Light/Dark Mode Toggle Button -->
-            <button type="button" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition flex items-center space-x-1.5 text-xs font-medium">
-                <i data-lucide="sun" id="theme-icon-sun" class="w-4 h-4 hidden"></i>
-                <i data-lucide="moon" id="theme-icon-moon" class="w-4 h-4"></i>
-                <span id="theme-text">Light Mode</span>
-            </button>
+<header class="border-b border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-950/50 backdrop-blur sticky top-0 z-50">
+  <div class="max-w-5xl mx-auto px-4 py4 flex justify-between items-center">
+    <div class="flex items-center space-x-2 cursor-pointer" onclick="showView('creator')">
+      <i data-lucide="gift" class="w-7 h-7 text-indigo-500"></i>
+       class="text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">PassDrop</span>
+    </div>
+    <button type="button" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center space-x-1.5 text-xs font-medium">
+      <i data-lucide="moon" id="icon-moon" class="w-4 h-4"></i>
+      <i data-lucide="sun" id="icon-sun" class="w-4 h-4 hidden"></i>
+      <span id="theme-text">Light</span>
+    </button>
+  </div>
+</header>
+
+<main class="flex-1 max-w3xl mx-auto w-full px-4 py-8">
+
+  <!-- CREATOR VIEW -->
+  <div id="creator-view" class="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p6 md:p-8 shadow-2xl">
+    <h1 class="text-2xl font-bold mb-2">Create a New Giveaway</h1>
+    <p class="text-sm text-slate-500 mb-6">Configure your video's giveaway link in seconds.>
+    <form onsubmit="handleCreate(event)" class="space-y-5">
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Giveaway Name</label>
+        <input type="text" id="g-name" required="e.g. Tech Giveaway Ep 45" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
+ </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Destination URL (Reward Link)</label>
+        <input type="url" id="g-url" required placeholder="https://drive.google.com/..." class="w bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
+      </div>
+      <div>
+        <label class="block-xs font-semibold uppercase tracking-wider mb-2">Secret Password (3-8 chars)</label>
+        <input type="text" id="g-pass" required minlength="3" maxlength="8" placeholder="e.g. WIN" class="w-full bg-slate-50:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-indigo-500">
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Winner Capacity</label>
+          <input type="number" id="g-cap" min="1" value50" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
         </div>
-    </header>
-
-    <!-- ================= MAIN CONTAINER ================= -->
-    <main class="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
-        
-        <!-- ================= VIEW 1: CREATOR FORM ================= -->
-        <div id="creator-view" class="bg-slate-800/40 dark:bg-slate-800/40 bg-white border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur">
-            <div class="mb-6">
-                <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Create a New Giveaway</h1>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Configure your video's giveaway link in seconds. No login required.</p>
-            </div>
-
-            <form id="create-form" onsubmit="handleCreateGiveaway(event)" class="space-y-5">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Giveaway Name / Title</label>
-                    <input type="text" id="giveaway-name" required placeholder="e.g. Tech Giveaway Episode 45" 
-                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Destination URL / Reward Link</label>
-                    <input type="url" id="dest-url" required placeholder="https://drive.google.com/... or reward link" 
-                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Secret Password (3 to 8 characters)</label>
-                    <input type="text" id="pass-code" required minlength="3" maxlength="8" placeholder="e.g. WIN" 
-                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100 font-mono">
-                    <span class="text-xs text-slate-500 mt-1 block">Must be between 3 and 8 characters long.</span>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Winner Capacity Cap</label>
-                        <input type="number" id="max-winners" min="1" value="50" required 
-                            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Win Probability</label>
-                        <select id="win-probability" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100">
-                            <option value="25">25% Win Chance</option>
-                            <option value="50" selected>50% Win Chance</option>
-                            <option value="75">75% Win Chance</option>
-                            <option value="100">100% Win Chance</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Public Link Lifetime Expiration</label>
-                    <select id="link-expiry-days" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100">
-                        <option value="1">1 Day</option>
-                        <option value="2">2 Days</option>
-                        <option value="3" selected>3 Days</option>
-                        <option value="5">5 Days</option>
-                        <option value="7">7 Days</option>
-                    </select>
-                </div>
-
-                <button type="submit" id="gen-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 px-4 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20">
-                    <i data-lucide="link" class="w-5 h-5"></i>
-                    <span>Generate Giveaway Links</span>
-                </button>
-            </form>
-
-            <!-- Created Link Result Box (Shows both Public Link and Private Admin Link) -->
-            <div id="created-result" class="hidden mt-6 p-5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 rounded-xl space-y-4">
-                <div class="flex items-center space-x-2 text-emerald-700 dark:text-emerald-400 font-medium text-sm">
-                    <i data-lucide="check-circle" class="w-5 h-5"></i>
-                    <span>Giveaway Links Created Successfully!</span>
-                </div>
-                
-                <div class="space-y-3 text-xs">
-                    <div>
-                        <span class="block text-slate-600 dark:text-slate-400 font-medium mb-1">Public Viewer Link:</span>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="shareable-link" readonly class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-300 font-mono">
-                            <button type="button" onclick="copyLink('shareable-link')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded-lg font-medium transition text-white">Copy</button>
-                        </div>
-                    </div>
-
-                    <div>
-                        <span class="block text-slate-600 dark:text-slate-400 font-medium mb-1">Private Admin Dashboard Link (Keep Secret):</span>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="admin-shareable-link" readonly class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-300 font-mono">
-                            <button type="button" onclick="copyLink('admin-shareable-link')" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg font-medium transition text-white">Copy</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Win Probability</label>
+          <select id="g-prob" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
+            <option value="25">25%</option><option value="50" selected>50%</option><option value="75">75%</option><option value="100">100%</option          </select>
         </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Link Expires After</label>
+        <select id="g-exp" class="w-full bg-slate-50 dark:bglate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500">
+          <option value="1">1 Day</option><option value="3" selected>3 Days</option><option="7">7 Days</option>
+        </select>
+      </div>
+      <button type="submit" id="gen-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl flex items-center justify-center space-x2 shadow-lg shadow-indigo-600/20 disabled:opacity-50">
+        <i data-lucide="link" class="w-5 h-5"></i><span>Generate Giveaway Links</span>
+      </button>
+    </form>
 
-        <!-- ================= VIEW 2: VIEWER ENTER PASSWORD FORM ================= -->
-        <div id="viewer-view" class="hidden bg-slate-800/40 dark:bg-slate-800/40 bg-white border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur">
-            <div class="text-center mb-6">
-                <div class="inline-flex p-3 bg-indigo-500/10 rounded-full mb-3 text-indigo-400">
-                    <i data-lucide="gift" class="w-8 h-8"></i>
-                </div>
-                <h2 id="viewer-title" class="text-2xl font-bold text-slate-900 dark:text-white mb-1">Giveaway Portal</h2>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Type the exact password revealed in the YouTube video to check if you won.</p>
-            </div>
-
-            <!-- Top Status Banner -->
-            <div id="top-status-banner" class="hidden mb-6 p-4 rounded-xl text-sm font-medium border flex items-start space-x-3">
-                <div id="top-status-icon" class="flex-shrink-0 mt-0.5"></div>
-                <div id="top-status-text" class="flex-1"></div>
-            </div>
-
-            <form id="viewer-form" onsubmit="handleCheckPassword(event)" class="space-y-4">
-                <div>
-                    <input type="text" id="viewer-pass" required minlength="3" maxlength="8" placeholder="Enter secret password..." 
-                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-wider focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-100">
-                </div>
-
-                <button id="submit-pass-btn" type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 px-4 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20">
-                    <i data-lucide="key" class="w-5 h-5"></i>
-                    <span>Unlock & Check Status</span>
-                </button>
-            </form>
-
-            <div class="mt-6 text-center">
-                <button type="button" onclick="showCreatorView()" class="text-xs text-slate-500 dark:text-slate-400 hover:underline">Create Your Own Giveaway Link</button>
-            </div>
+    <div id="-result" class="hidden mt-6 p-5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 rounded-xl space-y-4 fade-in">
+      <div class="flex items-center space-2 text-emerald-600 dark:text-emerald-400 font-medium text-sm">
+        <i data-lucide="check-circle" class="w-5 h-5"></i><span>Giveaway Created Successfully!</span>
+      </div>
+      <div>
+         class="block text-xs text-slate-500 mb-1">Public Viewer Link:</span>
+        <div class="flex space-x-2">
+          <input type="text" id="pub-link" readonly class="w-full bg-slate-100 dark:bg-slate- border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-mono">
+          <button type="button" onclick="copyVal('pub-link')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py2 rounded-lg text-xs font-medium text-white">Copy</button>
         </div>
-
-        <!-- ================= VIEW 3: INDIVIDUAL ADMIN DASHBOARD ================= -->
-        <div id="admin-view" class="hidden bg-slate-800/40 dark:bg-slate-800/40 bg-white border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur space-y-6">
-            <div>
-                <div class="flex items-center space-x-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">
-                    <i data-lucide="shield" class="w-4 h-4"></i>
-                    <span>Admin Dashboard</span>
-                </div>
-                <h2 id="admin-giveaway-name" class="text-2xl font-bold text-slate-900 dark:text-white">Giveaway Management</h2>
-            </div>
-
-            <!-- Admin Notice Banner -->
-            <div id="admin-notice" class="hidden p-4 rounded-xl text-sm font-medium border"></div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/60 p-4 rounded-xl">
-                    <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Winners Claimed</span>
-                    <span id="admin-winners-count" class="text-2xl font-bold text-slate-900 dark:text-white">0 / 0</span>
-                </div>
-                <div class="bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/60 p-4 rounded-xl">
-                    <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Win Probability</span>
-                    <span id="admin-prob-val" class="text-2xl font-bold text-indigo-500">50%</span>
-                </div>
-                <div class="bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/60 p-4 rounded-xl">
-                    <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Expiration Time</span>
-                    <span id="admin-expiry-val" class="text-sm font-bold text-slate-900 dark:text-white mt-1 block">-</span>
-                </div>
-            </div>
-
-            <div class="pt-4 flex space-x-4">
-                <button type="button" onclick="closeGiveawayEarly()" class="bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/30 px-4 py-2.5 rounded-xl text-xs font-medium transition">
-                    Close Giveaway Early
-                </button>
-                <button type="button" onclick="showCreatorView()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-medium transition">
-                    Create New Giveaway
-                </button>
-            </div>
+      </div>
+      <div>
+        <span class="block text-xs text-slate-500 mb-1">Private Admin Link (keep secret):</span>
+        <div class="flex space-x2">
+          <input type="text" id="adm-link" readonly class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-mono">
+           type="button" onclick="copyVal('adm-link')" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg text-xs font-medium text-white">Copy</button>
         </div>
+      </div>
+    </div>
+  </div  <!-- VIEWER VIEW -->
+  <div id="viewer-view" class="hidden bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl fade-in">
+ <div class="text-center mb-6">
+      <div class="inline-flex p-3 bg-indigo-500/10 rounded-full mb-3 text-indigo-500"><i data-lucide="gift" class="w-8-8"></i></div>
+      <h2 id="v-title" class="text-2xl font-bold mb-1">Giveaway Portal</h2>
+      <p class="text-sm text-slate-500">Type the password from the YouTube video to check if you.</p>
+    </div>
+    <div id="status" class="hidden mb-6 p-4 rounded-xl text-sm font-medium border fade-in">
+      <div id="status-text"></div>
+    </div>
+    <form onsubmit="handleCheck(event)" class="-y-4">
+      <input type="text" id="v-pass" required minlength="3" maxlength="8" placeholder="Enter secret password..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-wider focus:outline-none focus:border-indigo-500">
+      <button id="check-btn" type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font py-3 rounded-xl flex items-center justify-center space-x-2 disabled:opacity-50">
+        <i data-lucide="unlock" class="w-5 h-5"></i><span>Unlock My Reward</span>
+      </button>
+    </form>
+  </div  <!-- ADMIN VIEW -->
+  <div id="admin-view" class="hidden bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-2xl font-bold">Admin Dashboard</h2>
+        <p class="text-sm text-slate-500">Live giveaway statistics</p>
+      </div>
+       class="flex space-x-2">
+        <button type="button" onclick="loadAdmin()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-" title="Refresh"><i dataucide="refresh-cw" class="w-4 h-4"></i></button>
+        <button type="button" onclick="showView('creator')" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200:hover:bg-slate-700" title="Home"><i data-lucide="home" class="w-4 h-4"></i></button>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4-6">
+      <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+        <p class="text-xs text-slate-500 uppercase">Attempts</p><p id="stempts" class="text-2xl font-bold mt-1">0</p>
+      </div>
+      <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+        <p class="text-xs text-emerald-600:text-emerald-400 uppercase">Winners</p><p id="s-winners" class="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">0</p>
+      </div>
+      <div class="p-4 rounded-xl-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+        <p class="text-xs text-slate-500 uppercase">Capacity</p><p id="s-capacity" class="text-2xl font-bold mt-1"></p>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+        <p class="text-xs text-slate-500 uppercase">Expires</p><p="s-expiry" class="text-sm font-bold mt-2">-</p>
+      </div>
+    </div>
+    <div class="flex items-center justify-between mb-3">
+      <h class="text-sm font-semibold uppercase tracking-wider text-slate-500">Winners List</h3>
+      <button type="button" onclick="copyWinners()" class="text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate
 
-    </main>
 
-    <!-- ================= FOOTER ================= -->
-    <footer class="border-t border-slate-800 bg-slate-950/80 py-6 px-4 text-center text-xs text-slate-500 space-y-1">
-        <p>&copy; 2026 PassDrop Engine. All rights reserved.</p>
-        <p class="text-indigo-400 font-medium">Built & Powered by <span class="text-slate-300">JAKA</span></p>
-    </footer>
+200 dark:hover:bg-slate-700 rounded-lg px-3 py-1.5" title="Copy all winners"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
+    </div>
+    <div id="winners-list" class="space-y-2 max-h-72 overflow-y-auto text-sm">
+      <p class="text-slate-500 text-xs">No winners yet.</p>
+    </div>
+    <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
+      <p class="text-xs text-slate-500">Bin ID: <span id="f-binid" class="font-mono"></span></p>
+      <button type="button" onclick="deleteGiveaway()" class="text-xs text-red-500 hover:text-red-400 flex items-center space-x-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i><span>Delete Giveaway</span></button>
+    </div>
+  </div>
 
-    <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
-    <script>
-        // CONFIGURATION: JSONBin Master Key for Cloud Storage Syncing
-        const JSONBIN_MASTER_KEY = "$2a$10$yvbDpRB/vVpoc/7/Yb5rt.55iF68Dg6JKEj.Lp80bouj4nm8IAuSS";
+  <p class="text-center text-xs text-slate-400 dark:text-slate-600 mt-8">PassDrop v1.0 · Made by JAKA · Powered by JSONBin</p>
+</main>
 
-        let currentBinId = null;
-        let currentAdminMode = false;
+<script>
+// ===== CONFIG =====
+const BIN_ID = '6acf87d6ffd5d160536a857c';
+const MASTER_KEY = '$2a$10$ISVxVv0EISYA6qDaLLhr4eDPlxx9QVu3taLGbRXIU5uaxUPBaYW4G';
+// ⚠️ PASTE YOUR REAL X-MASTER-KEY ABOVE (Part 2 will also set this - use this line)
 
-        document.addEventListener("DOMContentLoaded", () => {
-            if (window.lucide) lucide.createIcons();
-            initTheme();
-            checkUrlParams();
-        });
+const API = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
 
-        // --- Theme Handlers ---
-        function initTheme() {
-            const isDark = localStorage.getItem("theme") !== "light";
-            if (isDark) {
-                document.documentElement.classList.add("dark");
-                setThemeUI(true);
-            } else {
-                document.documentElement.classList.remove("dark");
-                setThemeUI(false);
-            }
-        }
+// ===== HELPERS =====
+function lucideInit(){ if(window.lucide) lucide.createIcons(); }
+function copyVal(id){ const el=document.getElementById(id); el.select(); document.execCommand('copy'); }
+function showView(name){
+  ['creator','viewer','admin'].forEach(v=>{
+    document.getElementById(v+'-view').classList.toggle('hidden', v!==name);
+  });
+  window.scrollTo(0,0); lucideInit();
+}
+function toggleTheme(){
+  document.documentElement.classList.toggle('dark');
+  const dark=document.documentElement.classList.contains('dark');
+  document.getElementById('icon-moon').classList.toggle('hidden', !dark);
+  document.getElementById('icon-sun').classList.toggle('hidden', dark);
+  document.getElementById('theme-text').textContent = dark?'Light':'Dark';
+}
 
-        function toggleTheme() {
-            const isDark = document.documentElement.classList.contains("dark");
-            if (isDark) {
-                document.documentElement.classList.remove("dark");
-                localStorage.setItem("theme", "light");
-                setThemeUI(false);
-            } else {
-                document.documentElement.classList.add("dark");
-                localStorage.setItem("theme", "dark");
-                setThemeUI(true);
-            }
-        }
+// ===== API =====
+async function readBin(){
+  const r = await fetch(API+'/latest', {headers:{'X-Master-Key':MASTER_KEY}});
+  if(!r.ok) throw new Error('Read failed: '+r.status);
+  const j = await r.json();
+  return j.record || {};
+}
+async function writeBin(data){
+  const r = await fetch(API, {
+    method:'PUT',
+    headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},
+    body: JSON.stringify(data)
+  });
+  if(!r.ok) throw new Error('Write failed: '+r.status);
+}
+</script>
+// ===== URL ROUTING =====
+function getParams(){
+  const p = new URLSearchParams(window.location.search);
+  return {
+    id: p.get('id'),
+    admin: p.get('admin') === '1'
+  };
+}
 
-        function setThemeUI(isDark) {
-            const sunIcon = document.getElementById("theme-icon-sun");
-            const moonIcon = document.getElementById("theme-icon-moon");
-            const text = document.getElementById("theme-text");
-            if (isDark) {
-                sunIcon.classList.remove("hidden");
-                moonIcon.classList.add("hidden");
-                if(text) text.innerText = "Light Mode";
-            } else {
-                sunIcon.classList.add("hidden");
-                moonIcon.classList.remove("hidden");
-                if(text) text.innerText = "Dark Mode";
-            }
-        }
+// ===== CREATOR =====
+async function handleCreate(e){
+  e.preventDefault();
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  const name = document.getElementById('g-name').value.trim();
+  const url = document.getElementById('g-url').value.trim();
+  const pass = document.getElementById('g-pass').value.trim();
+  const cap = parseInt(document.getElementById('g-cap').value);
+  const prob = parseInt(document.getElementById('g-prob').value);
+  const expDays = parseInt(document.getElementById('g-exp').value);
 
-        function showCreatorView() {
-            window.location.href = window.location.pathname;
-        }
+  try {
+    const data = await readBin();
+    const gid = 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+    data[gid] = {
+      name: name,
+      url: url,
+      pass: pass.toLowerCase(),
+      cap: cap,
+      prob: prob,
+      created: Date.now(),
+      expires: Date.now() + expDays*24*60*60*1000,
+      winners: []
+    };
+    await writeBin(data);
 
-        // Check URL parameters for viewer (?g=...) or admin (?admin=...) links
-        function checkUrlParams() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const gId = urlParams.get('g');
-            const adminId = urlParams.get('admin');
+    const base = window.location.origin + window.location.pathname;
+    document.getElementById('pub-link').value = base + '?id=' + gid;
+    document.getElementById('adm-link').value = base + '?id=' + gid + '&admin=1';
+    document.getElementById('created-result').classList.remove('hidden');
+    lucideInit();
+  } catch(err){
+    alert('Error creating giveaway: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
 
-            if (gId) {
-                currentBinId = gId;
-                document.getElementById("creator-view").classList.add("hidden");
-                document.getElementById("viewer-view").classList.remove("hidden");
-                loadViewerGiveaway();
-            } else if (adminId) {
-                currentBinId = adminId;
-                currentAdminMode = true;
-                document.getElementById("creator-view").classList.add("hidden");
-                document.getElementById("admin-view").classList.remove("hidden");
-                loadAdminDashboard();
-            }
-        }
+// ===== VIEWER =====
+async function handleCheck(e){
+  e.preventDefault();
+  const {id} = getParams();
+  const btn = document.getElementById('check-btn');
+  const input = document.getElementById('v-pass');
+  btn.disabled = true;
+  showStatus('loading', 'Checking your entry...');
 
-        // --- CREATOR: Save new giveaway to JSONBin cloud ---
-        async function handleCreateGiveaway(e) {
-            if (e) e.preventDefault();
+  try {
+    const data = await readBin();
+    const g = data[id];
 
-            const name = document.getElementById("giveaway-name").value.trim();
-            const destUrl = document.getElementById("dest-url").value.trim();
-            const passCode = document.getElementById("pass-code").value.trim();
-            const maxWinners = parseInt(document.getElementById("max-winners").value);
-            const probability = parseInt(document.getElementById("win-probability").value);
-            const expiryDays = parseInt(document.getElementById("link-expiry-days").value);
+    if(!g){ showStatus('error', 'Giveaway not found. Check your link.'); return; }
+    if(Date.now() > g.expires){ showStatus('error', '⏰ This giveaway has expired.'); return; }
+    if(g.winners.length >= g.cap){ showStatus('error', '😢 All rewards have been claimed. Better luck next time!'); return; }
 
-            if (passCode.length < 3 || passCode.length > 8) {
-                alert("Password must be between 3 and 8 characters long.");
-                return;
-            }
+    if(input.value.trim().toLowerCase() !== g.pass){
+      showStatus('error', '❌ Wrong password. Watch the video again for the hint!');
+      return;
+    }
 
-            const genBtn = document.getElementById("gen-btn");
-            genBtn.innerText = "Creating Cloud Giveaway...";
-            genBtn.disabled = true;
+    // correct password -> roll probability
+    if(Math.random()*100 > g.prob){
+      showStatus('lose', '😔 Not a winner this time. Try again with the same password!');
+      return;
+    }
 
-            const now = Date.now();
-            const viewerExpiresAt = now + (expiryDays * 24 * 60 * 60 * 1000);
+    // winner -> record & reveal
+    if(g.winners.some(w => w.device === getDeviceId())){
+      // already claimed on this device
+    } else {
+      g.winners.push({ device: getDeviceId(), time: Date.now() });
+      await writeBin(data);
+    }
+    showStatus('win', '🎉 CONGRATULATIONS! You are a winner! Your reward link: <a href="' + g.url + '" target="_blank" class="underline font-bold text-emerald-600 dark:text-emerald-400">CLICK HERE TO CLAIM</a>');
+  } catch(err){
+    showStatus('error', 'Connection error. Please try again.');
+  } finally {
+    btn.disabled = false;
+  }
+}
 
-            const giveawayData = {
-                name: name,
-                destination: destUrl,
-                password: passCode,
-                maxWinners: maxWinners,
-                probability: probability,
-                currentWinners: 0,
-                viewerExpiresAt: viewerExpiresAt,
-                isClosedEarly: false
-            };
+function getDeviceId(){
+  let id = localStorage.getItem('pd_device');
+  if(!id){ id = 'd' + Math.random().toString(36); localStorage.setItem('pd_device', id); }
+  return id;
+}
 
-            try {
-                const response = await fetch("https://api.jsonbin.io/v3/b", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_MASTER_KEY,
-                        'X-Bin-Private': 'false'
-                    },
-                    body: JSON.stringify(giveawayData)
-                });
+function showStatus(type, html){
+  const box = document.getElementById('status');
+  const colors = {
+    loading: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-600 dark:text-indigo-400',
+    error: 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400',
+    lose: 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400',
+    win: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+  };
+  box.className = 'mb-6 p-4 rounded-xl text-sm font-medium border fade-in ' + colors[type];
+  box.innerHTML = html;
+}
 
-                if (!response.ok) throw new Error("API request failed");
+// ===== ADMIN =====
+async function loadAdmin(){
+  const {id} = getParams();
+  try {
+    const data = await readBin();
+    const g = data[id];
+    if(!g){ alert('Giveaway not found'); return; }
+    document.getElementById('v-title').textContent = g.name; // reused for admin title context
+    document.getElementById('s-attempts').textContent = g.winners.length; // simplified stat
+    document.getElementById('s-winners').textContent = g.winners.length;
+    document.getElementById('s-capacity').textContent = g.cap;
+    document.getElementById('s-expiry').textContent = new Date(g.expires).toLocaleDateString();
+    document.getElementById('f-binid').textContent = BIN_ID;
 
-                const result = await response.json();
-                const binId = result.metadata.id;
+    const list = document.getElementById('winners-list');
+    if(g.winners.length === 0){
+      list.innerHTML = '<p class="text-slate-500 text-xs">No winners yet.</p>';
+    } else {
+      list.innerHTML = g.winners.map((w,i) =>
+        '<div class="flex justify-between items-center p-2 rounded-lg bg-slate-100 dark:bg-slate-900">' +
+        '<span>#'+(i+1)+' · '+w.device+'</span>' +
+        '<span class="text-xs text-slate-500">'+new Date(w.time).toLocaleString()+'</span></div>'
+      ).join('');
+    }
+    window.__winners = g.winners;
+  } catch(err){
+    alert('Failed to load: ' + err.message);
+  }
+}
 
-                const origin = window.location.origin + window.location.pathname;
-                document.getElementById("shareable-link").value = origin + '?g=' + binId;
-                document.getElementById("admin-shareable-link").value = origin + '?admin=' + binId;
+function copyWinners(){
+  if(!window.__winners || !window.__winners.length){ alert('No winners to copy'); return; }
+  const text = window.__winners.map((w,i)=>(i+1)+'. '+w.device+' - '+new Date(w.time).toLocaleString()).join('\n');
+  navigator.clipboard.writeText(text).then(()=>alert('Winners copied!'));
+}
 
-                const resBox = document.getElementById("created-result");
-                resBox.classList.remove("hidden");
-                resBox.scrollIntoView({ behavior: 'smooth' });
-            } catch (err) {
-                alert("Failed to connect to JSONBin storage. Check your API key.");
-            } finally {
-                genBtn.innerHTML = '<i data-lucide="link" class="w-5 h-5"></i><span>Generate Giveaway Links</span>';
-                if (window.lucide) lucide.createIcons();
-            }
-        }
+async function deleteGiveaway(){
+  const {id} = getParams();
+  if(!confirm('Delete this giveaway permanently?')) return;
+  try {
+    const data = await readBin();
+    delete data[id];
+    await writeBin(data);
+    alert('Deleted. Redirecting home...');
+    window.location.href = window.location.pathname;
+  } catch(err){ alert('Delete failed: '+err.message); }
+}
+// ===== BOOT =====
+(function init(){
+  const {id, admin} = getParams();
 
-        function copyLink(elementId) {
-            const input = document.getElementById(elementId);
-            input.select();
-            document.execCommand("copy");
-            alert("Link copied to clipboard!");
-        }
+  if(id && admin){
+    // Admin dashboard
+    showView('admin');
+    loadAdmin();
+  } else if(id){
+    // Viewer portal
+    showView('viewer');
+    // Pre-load giveaway title if bin is readable
+    readBin().then(data=>{
+      const g = data[id];
+      if(g) document.getElementById('v-title').textContent = g.name;
+    }).catch(()=>{});
+  } else {
+    // Creator home
+    showView('creator');
+  }
 
-        // --- VIEWER: Load giveaway data ---
-        async function loadViewerGiveaway() {
-            const form = document.getElementById("viewer-form");
-            let gw = null;
+  // Restore theme preference
+  const saved = localStorage.getItem('pd_theme');
+  if(saved === 'light'){
+    document.documentElement.classList.remove('dark');
+    document.getElementById('icon-moon').classList.remove('hidden');
+    document.getElementById('icon-sun').classList.add('hidden');
+    document.getElementById('theme-text').textContent = 'Dark';
+  }
+  toggleThemeSafe();
 
-            try {
-                const res = await fetch(`https://api.jsonbin.io/v3/b/${currentBinId}`, {
-                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    gw = data.record;
-                }
-            } catch (e) {}
+  lucideInit();
+})();
 
-            if (!gw) {
-                showTopBanner("error", "Error: Giveaway link not found or expired.");
-                form.classList.add("hidden");
-                return;
-            }
+function toggleThemeSafe(){
+  const dark = document.documentElement.classList.contains('dark');
+  localStorage.setItem('pd_theme', dark ? 'dark' : 'light');
+}
 
-            window.currentGiveawayData = gw;
-            document.getElementById("viewer-title").innerText = gw.name;
-
-            if (gw.isClosedEarly || Date.now() > gw.viewerExpiresAt) {
-                showTopBanner("error", "This giveaway has expired or has been closed.");
-                form.classList.add("hidden");
-                return;
-            }
-        }
-
-        // --- VIEWER: Validate Password, Roll Probability & Apply 2-Hour Cooldown ---
-        async function handleCheckPassword(e) {
-            if (e) e.preventDefault();
-            
-            const submitBtn = document.getElementById("submit-pass-btn");
-            if (submitBtn) submitBtn.disabled = true;
-
-            try {
-                const inputPass = document.getElementById("viewer-pass").value.trim();
-                const gw = window.currentGiveawayData;
-                if (!gw) {
-                    showTopBanner("error", "Giveaway data not loaded.");
-                    if (submitBtn) submitBtn.disabled = false;
-                    return false;
-                }
-
-                // Ensure ipLogs object exists
-                if (!gw.ipLogs) gw.ipLogs = {};
-
-                // Generate or retrieve persistent client ID
-                let clientId = localStorage.getItem("passdrop_client_id");
-                if (!clientId) {
-                    clientId = "client_" + Math.random().toString(36).substring(2, 10);
-                    localStorage.setItem("passdrop_client_id", clientId);
-                }
-
-                let clientData = gw.ipLogs[clientId] || { attempts: 0, cooldownUntil: 0 };
-                const now = Date.now();
-
-                // 1. Check Cooldown
-                if (now < clientData.cooldownUntil) {
-                    const minutesLeft = Math.ceil((clientData.cooldownUntil - now) / (1000 * 60));
-                    showTopBanner("warning", `Cooldown active! Please try again in ${minutesLeft} minute(s).`);
-                    if (submitBtn) submitBtn.disabled = false;
-                    return false;
-                }
-
-                // 2. Validate Password
-                if (inputPass !== gw.password) {
-                    clientData.attempts = (clientData.attempts || 0) + 1;
-                    
-                    if (clientData.attempts >= 5) {
-                        clientData.cooldownUntil = now + (2 * 60 * 60 * 1000); // 2 Hours
-                        gw.ipLogs[clientId] = clientData;
-                        await updateCloudBin(gw);
-
-                        showTopBanner("error", "Too many incorrect attempts! Cooldown active for 2 hours.");
-                        if (submitBtn) submitBtn.disabled = false;
-                        return false;
-                    }
-
-                    gw.ipLogs[clientId] = clientData;
-                    await updateCloudBin(gw);
-
-                    showTopBanner("error", `Incorrect password! (${5 - clientData.attempts} attempt(s) remaining)`);
-                    if (submitBtn) submitBtn.disabled = false;
-                    return false;
-                }
-
-                // Reset incorrect attempts on correct password
-                clientData.attempts = 0;
-
-                // 3. Check Capacity
-                if (gw.currentWinners >= gw.maxWinners) {
-                    showTopBanner("warning", "Giveaway Over! The maximum winner limit has been reached.");
-                    if (submitBtn) submitBtn.disabled = false;
-                    return false;
-                }
-
-                // 4. Roll Win Probability
-                const roll = Math.random() * 100;
-                const didWin = roll < gw.probability;
-
-                if (didWin) {
-                    gw.currentWinners += 1;
-                    gw.ipLogs[clientId] = clientData;
-                    await updateCloudBin(gw);
-
-                    showTopBanner("success", "🎉 CONGRATULATIONS! YOU WON! Redirecting to your prize...");
-                    setTimeout(() => {
-                        window.location.href = gw.destination;
-                    }, 2000);
-                } else {
-                    // Non-winner: 2-hour cooldown
-                    clientData.cooldownUntil = now + (2 * 60 * 60 * 1000); // 2 Hours
-                    gw.ipLogs[clientId] = clientData;
-                    await updateCloudBin(gw);
-
-                    showTopBanner("warning", "You did not win this time! Please try again after 2 hours.");
-                    if (submitBtn) submitBtn.disabled = false;
-                }
-
-            } catch (err) {
-                console.error(err);
-                showTopBanner("error", "An unexpected error occurred. Please try again.");
-                if (submitBtn) submitBtn.disabled = false;
-            }
-
-            return false;
-        }
-
-        // Helper function to sync updated data to JSONBin cloud
-        async function updateCloudBin(gwData) {
-            try {
-                await fetch(`https://api.jsonbin.io/v3/b/${currentBinId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_MASTER_KEY
-                    },
-                    body: JSON.stringify(gwData)
-                });
-            } catch (err) {
-                console.error("Cloud update failed:", err);
-            }
-        }
-
-        // Helper function to sync updated data to JSONBin cloud
-        async function updateCloudBin(gwData) {
-            try {
-                await fetch(`https://api.jsonbin.io/v3/b/${currentBinId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_MASTER_KEY
-                    },
-                    body: JSON.stringify(gwData)
-                });
-            } catch (err) {
-                console.error("Cloud update failed:", err);
-            }
-        }
-        // --- ADMIN DASHBOARD: Load individual session stats ---
-        async function loadAdminDashboard() {
-            const notice = document.getElementById("admin-notice");
-            let gw = null;
-
-            try {
-                const res = await fetch(`https://api.jsonbin.io/v3/b/${currentBinId}`, {
-                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    gw = data.record;
-                }
-            } catch (e) {}
-
-            if (!gw) {
-                notice.className = "p-4 rounded-xl text-sm font-medium border bg-red-950/50 text-red-300 border-red-500/30";
-                notice.innerText = "Admin giveaway session not found.";
-                notice.classList.remove("hidden");
-                return;
-            }
-
-            window.currentGiveawayData = gw;
-            document.getElementById("admin-giveaway-name").innerText = gw.name;
-            document.getElementById("admin-winners-count").innerText = `${gw.currentWinners} / ${gw.maxWinners}`;
-            document.getElementById("admin-prob-val").innerText = `${gw.probability}%`;
-
-            const daysLeft = Math.max(0, Math.ceil((gw.viewerExpiresAt - Date.now()) / (1000 * 60 * 60 * 24)));
-            document.getElementById("admin-expiry-val").innerText = `${daysLeft} Days Remaining`;
-
-            if (gw.isClosedEarly) {
-                notice.className = "p-4 rounded-xl text-sm font-medium border bg-amber-950/50 text-amber-300 border-amber-500/30";
-                notice.innerText = "Notice: This giveaway has been closed early.";
-                notice.classList.remove("hidden");
-            }
-        }
-
-        // --- ADMIN DASHBOARD: Close giveaway early ---
-        async function closeGiveawayEarly() {
-            const gw = window.currentGiveawayData;
-            if (!gw) return;
-
-            gw.isClosedEarly = true;
-            try {
-                await fetch(`https://api.jsonbin.io/v3/b/${currentBinId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_MASTER_KEY
-                    },
-                    body: JSON.stringify(gw)
-                });
-                alert("Giveaway closed early successfully!");
-                location.reload();
-            } catch (err) {
-                alert("Failed to close giveaway.");
-            }
-        }
-    </script>
+// Save theme on every toggle (wrap original)
+const _origToggle = toggleTheme;
+toggleTheme = function(){ _origToggle(); toggleThemeSafe(); };
+</script>
 </body>
 </html>
