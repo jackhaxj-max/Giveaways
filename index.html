@@ -139,17 +139,27 @@
         </span>
       </button>
       <div id="settings-body" class="hidden border-t border-slate-200 dark:border-slate-700 px-4 py-4 space-y-4">
-        <div><label class="lbl">Destination URL</label><input type="url" id="s-url" class="inp bg-white dark:bg-slate-800"></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label class="lbl">Current Password</label><input type="password" id="s-old" maxlength="8" autocomplete="off" placeholder="Only needed to change it" class="inp bg-white dark:bg-slate-800 font-mono"></div>
-          <div><label class="lbl">New Password (3-8 chars)</label><input type="text" id="s-pass" maxlength="8" autocomplete="off" placeholder="Leave blank to keep current" class="inp bg-white dark:bg-slate-800 font-mono"></div>
+          <div><label class="lbl" for="s-cap">Winner Capacity</label><input type="number" id="s-cap" min="1" max="1000000" step="1" required class="inp bg-white dark:bg-slate-800"></div>
+          <div><label class="lbl" for="s-url">Destination URL</label><input type="url" id="s-url" class="inp bg-white dark:bg-slate-800"></div>
         </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div><label class="lbl" for="s-old">Current Password</label><input type="password" id="s-old" maxlength="8" autocomplete="off" placeholder="Only needed to change it" class="inp bg-white dark:bg-slate-800 font-mono"></div>
+          <div><label class="lbl" for="s-pass">New Password (3-8 chars)</label><input type="text" id="s-pass" maxlength="8" autocomplete="off" placeholder="Leave blank to keep current" class="inp bg-white dark:bg-slate-800 font-mono"></div>
+        </div>
+        <p class="text-xs text-slate-500">Changing capacity keeps existing stats. Changing the reward link or password resets attempts and winners. Restart resets stats and extends the expiry period.</p>
         <button type="button" id="save-btn" onclick="handleSave()" class="btn px-6 py-2.5 text-sm"><i data-lucide="save" class="w-4 h-4"></i><span>Save Changes</span></button>
-        <div class="pt-4 mt-2 border-t border-slate-300 dark:border-slate-700 flex items-center justify-between gap-4">
-          <p class="text-xs text-slate-500">Deleting removes this giveaway and both links permanently.</p>
-          <button type="button" id="del-btn" onclick="handleDelete()" class="shrink-0 flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-red-500/40 text-red-500 hover:bg-red-500/10 disabled:opacity-50">
-            <i data-lucide="trash-2" class="w-4 h-4"></i><span>Delete Giveaway</span>
-          </button>
+        <div class="pt-4 mt-2 border-t border-slate-300 dark:border-slate-700 space-y-4">
+          <div class="flex items-center justify-between gap-4">
+            <div><p class="text-sm font-medium">Restart Giveaway</p><p class="text-xs text-slate-500 mt-1">Reset attempts and winners, clear cooldowns, and renew the expiry period.</p></div>
+            <button type="button" id="restart-btn" onclick="handleRestart()" class="shrink-0 inline-flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 disabled:opacity-50"><i data-lucide="rotate-ccw" class="w-4 h-4"></i><span>Restart</span></button>
+          </div>
+          <div class="pt-4 border-t border-slate-300 dark:border-slate-700 flex items-center justify-between gap-4">
+            <p class="text-xs text-slate-500">Deleting removes this giveaway and both links permanently.</p>
+            <button type="button" id="del-btn" onclick="handleDelete()" class="shrink-0 flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-red-500/40 text-red-500 hover:bg-red-500/10 disabled:opacity-50">
+              <i data-lucide="trash-2" class="w-4 h-4"></i><span>Delete Giveaway</span>
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -364,7 +374,10 @@ async function loadAdmin() {
     $('s-winners').textContent = data.winners || 0;
     $('s-capacity').textContent = data.capacity || 0;
     $('s-expiry').textContent = new Date(data.expiresAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-    if ($('settings-body').classList.contains('hidden')) $('s-url').value = data.url || '';
+    if ($('settings-body').classList.contains('hidden')) {
+      $('s-url').value = data.url || '';
+      $('s-cap').value = data.capacity || 1;
+    }
     showView('admin');
   } catch (error) {
     showError(error.status === 404 ? 'Link Not Found' : 'Could not load', error.message);
@@ -383,23 +396,44 @@ async function handleSave() {
   const url = $('s-url').value.trim();
   const currentPassword = $('s-old').value.trim();
   const password = $('s-pass').value.trim();
+  const capacity = Number($('s-cap').value);
   if (url && !okUrl(url)) return alert('Reward link must start with http:// or https://');
+  if (!Number.isSafeInteger(capacity) || capacity < 1 || capacity > 1000000) return alert('Capacity must be a whole number from 1 to 1,000,000.');
   if (password && (password.length < 3 || password.length > 8)) return alert('New password must be 3-8 characters.');
   if (password && !currentPassword) return alert('Enter your current password to set a new one.');
 
   const button = $('save-btn');
   button.disabled = true;
   try {
-    await apiRequest('', {
+    const result = await apiRequest('', {
       method: 'POST',
-      body: JSON.stringify({ action: 'admin-save', adminId: ADMIN_ID, url, currentPassword, password })
+      body: JSON.stringify({ action: 'admin-save', adminId: ADMIN_ID, url, currentPassword, password, capacity })
     });
     $('s-old').value = '';
     $('s-pass').value = '';
-    alert('Settings saved!');
     await loadAdmin();
+    alert(result.statsReset
+      ? 'Settings saved. Attempts and winners were reset because the reward link or password changed.'
+      : 'Settings saved. Existing stats were kept.');
   } catch (error) {
     alert(error.message || 'Could not save settings.');
+  } finally {
+    button.disabled = false;
+  }
+}
+async function handleRestart() {
+  if (!confirm('Restart this giveaway? Attempts and winners will reset to zero, cooldowns will clear, and the expiry timer will restart.')) return;
+  const button = $('restart-btn');
+  button.disabled = true;
+  try {
+    await apiRequest('', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'restart', adminId: ADMIN_ID })
+    });
+    await loadAdmin();
+    alert('Giveaway restarted. Attempts and winners are now zero, and the expiry timer has restarted.');
+  } catch (error) {
+    alert(error.message || 'Could not restart the giveaway.');
   } finally {
     button.disabled = false;
   }

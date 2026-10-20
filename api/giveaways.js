@@ -177,6 +177,7 @@ async function handleCreate(body, res) {
     password,
     capacity,
     probability,
+    durationDays: expiresInDays,
     winners: 0,
     attempts: 0,
     adminId,
@@ -263,24 +264,70 @@ async function handleAdminSave(body, res) {
   const newUrl = typeof body.url === "string" ? body.url.trim() : "";
   const newPassword = typeof body.password === "string" ? body.password.trim() : "";
   const currentPassword = typeof body.currentPassword === "string" ? body.currentPassword.trim() : "";
+  const hasCapacity = Object.prototype.hasOwnProperty.call(body, "capacity");
+  const newCapacity = hasCapacity ? Number(body.capacity) : Number(giveaway.capacity);
 
+  let safeUrl = "";
   if (newUrl) {
-    const url = safeRewardUrl(newUrl);
-    if (!url) return send(res, 400, { error: "Enter a valid HTTP or HTTPS reward URL." });
-    giveaway.url = url;
+    safeUrl = safeRewardUrl(newUrl);
+    if (!safeUrl) return send(res, 400, { error: "Enter a valid HTTP or HTTPS reward URL." });
   }
-  if (newPassword) {
-    if (newPassword.length < 3 || newPassword.length > 8) {
-      return send(res, 400, { error: "New password must be 3–8 characters after trimming spaces." });
-    }
-    if (!currentPassword || currentPassword.toLowerCase() !== String(giveaway.password || "").toLowerCase()) {
-      return send(res, 403, { error: "Current password is incorrect." });
-    }
-    giveaway.password = newPassword;
+  if (newPassword && (newPassword.length < 3 || newPassword.length > 8)) {
+    return send(res, 400, { error: "New password must be 3–8 characters after trimming spaces." });
+  }
+  if (newPassword && (!currentPassword || currentPassword.toLowerCase() !== String(giveaway.password || "").toLowerCase())) {
+    return send(res, 403, { error: "Current password is incorrect." });
+  }
+  if (!Number.isSafeInteger(newCapacity) || newCapacity < 1 || newCapacity > MAX_CAPACITY) {
+    return send(res, 400, { error: `Winner capacity must be between 1 and ${MAX_CAPACITY}.` });
+  }
+
+  const oldSafeUrl = safeRewardUrl(giveaway.url);
+  const linkChanged = Boolean(safeUrl && safeUrl !== oldSafeUrl);
+  const passwordChanged = Boolean(newPassword && newPassword.toLowerCase() !== String(giveaway.password || "").toLowerCase());
+  const statsReset = linkChanged || passwordChanged;
+  const currentWinners = Number(giveaway.winners || 0);
+  if (!statsReset && newCapacity < currentWinners) {
+    return send(res, 400, { error: "Capacity cannot be less than the number of winners already recorded." });
+  }
+
+  if (safeUrl) giveaway.url = safeUrl;
+  if (passwordChanged) giveaway.password = newPassword;
+  giveaway.capacity = newCapacity;
+  if (statsReset) {
+    giveaway.attempts = 0;
+    giveaway.winners = 0;
+    giveaway.cd = {};
   }
 
   await writeDatabase(database);
-  return send(res, 200, { ok: true });
+  return send(res, 200, { ok: true, statsReset, capacity: giveaway.capacity });
+}
+
+async function handleRestart(body, res) {
+  const adminId = typeof body.adminId === "string" ? body.adminId : "";
+  if (!adminId) return send(res, 400, { error: "Admin link is required." });
+  const database = await readDatabase();
+  const found = findAdmin(database, adminId);
+  if (!found) return send(res, 404, { error: "Admin link not found." });
+
+  const giveaway = found[1];
+  let durationDays = Number(giveaway.durationDays);
+  if (!Number.isInteger(durationDays) || durationDays < 1 || durationDays > 10) {
+    const oldDuration = (Date.parse(giveaway.expiresAt) - Date.parse(giveaway.createdAt)) / 86400000;
+    durationDays = Number.isFinite(oldDuration) ? Math.min(10, Math.max(1, Math.round(oldDuration))) : 3;
+  }
+
+  const now = Date.now();
+  giveaway.durationDays = durationDays;
+  giveaway.createdAt = new Date(now).toISOString();
+  giveaway.expiresAt = new Date(now + durationDays * 86400000).toISOString();
+  giveaway.attempts = 0;
+  giveaway.winners = 0;
+  giveaway.cd = {};
+
+  await writeDatabase(database);
+  return send(res, 200, { ok: true, expiresAt: giveaway.expiresAt, durationDays });
 }
 
 async function handleDelete(body, res) {
@@ -308,6 +355,7 @@ module.exports = async function handler(req, res) {
     if (body.action === "create") return await handleCreate(body, res);
     if (body.action === "check") return await handleCheck(req, body, res);
     if (body.action === "admin-save") return await handleAdminSave(body, res);
+    if (body.action === "restart") return await handleRestart(body, res);
     if (body.action === "delete") return await handleDelete(body, res);
     return send(res, 400, { error: "Unknown action." });
   } catch (error) {
